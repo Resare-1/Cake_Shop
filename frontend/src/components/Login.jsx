@@ -1,29 +1,67 @@
-import React, { useState } from 'react';
-import { auth } from '../api';
+import { useState } from 'react';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 
-export default function Login({ onLogin }) {
+const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
 
-  async function handleLogin() {
-    try {
-      const res = await auth.login({ username, password });
-      onLogin(res.user, res.token);
-    } catch (err) {
-      setError(err.error || 'Login failed');
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Simple demo login - replace with real auth later
+    if (username && password) {
+      onLogin({
+        username: username,
+        role: username.toLowerCase().includes('manager') ? 'Manager' : 'Staff'
+      });
     }
-  }
+  };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <div className="p-6 bg-white rounded shadow w-80">
-        <h2 className="text-xl font-bold mb-4">CakeShop Login</h2>
-        <input className="border p-2 w-full mb-3" placeholder="Username" onChange={e=>setUsername(e.target.value)} />
-        <input type="password" className="border p-2 w-full mb-3" placeholder="Password" onChange={e=>setPassword(e.target.value)} />
-        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-        <button className="bg-blue-600 text-white w-full p-2 rounded" onClick={handleLogin}>Login</button>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-card p-8 rounded-lg shadow-lg border border-border">
+        <h1 className="text-3xl font-bold text-foreground mb-6 text-center">
+          Welcome Back
+        </h1>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              Username
+            </label>
+            <Input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium text-foreground mb-2 block">
+              Password
+            </label>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <Button type="submit" className="w-full">
+            Login
+          </Button>
+        </form>
+
+        <p className="text-xs text-muted-foreground mt-4 text-center">
+          Tip: Use "manager" in username for Manager role
+        </p>
       </div>
     </div>
   );
-}
+};
+
+export default Login;

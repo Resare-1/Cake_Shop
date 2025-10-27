@@ -9,5 +9,6 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- เปลี่ยนเพื่อให้ เข้าระบบได้เฉยๆ 
 INSERT INTO users (username, password, fullname, role)
-VALUES ('manager', '$2b$10$u9hQe8k6HqY2c8kzZg1YaO1q6uWqvV8fF3eYf8L2QJ9D3jHk6eZ9K', 'Manager Account', 'Manager');
+VALUES ('manager', 'manager123', 'Manager Account', 'Manager');
