@@ -4,6 +4,7 @@ import SendOrder from './pages/SendOrder';
 import Orders from './pages/Orders';
 import Menu from './pages/Menu';
 import Ingredients from './pages/Ingredients';
+import TakeOrder from './pages/TakeOrder';
 
 const MainContent = ({ active }) => {
   switch (active) {
@@ -11,11 +12,11 @@ const MainContent = ({ active }) => {
       return <SendOrder />; // Staff / Admin use case
     case 'orders':
       return <Orders />; // Placeholder page
-    //case 'menu':
-    //  return <Menu />; // Manager page
+    case 'take-order':
+     return <TakeOrder />; 
     //case 'ingredients':
     //  return <Ingredients />; // Manager page
-    
+
     default:
       // Fallback to original generic placeholder
       return (

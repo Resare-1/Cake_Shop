@@ -1,13 +1,14 @@
-// src/components/pages/Orders.jsx
 import { useState } from 'react';
 
-const Orders = () => {
+const Orders = ({ userRole }) => {
   // Mock data
   const [orders] = useState([
-    { id: 1, menu: 'Chocolate Cake', status: 'Pending', quantity: 1 },
-    { id: 2, menu: 'Vanilla Cake', status: 'Confirmed', quantity: 2},
-    { id: 3, menu: 'Strawberry Cake', status: 'Preparing', quantity: 1},
+    { id: 1, menu: 'Chocolate Cake', status: 'Pending', quantity: 1, subtotal: 250 },
+    { id: 2, menu: 'Vanilla Cake', status: 'Confirmed', quantity: 2, subtotal: 400 },
+    { id: 3, menu: 'Strawberry Cake', status: 'Preparing', quantity: 1, subtotal: 300 },
   ]);
+
+  const isManager = userRole?.toLowerCase() === 'manager';
 
   return (
     <div className="ml-64 p-8 min-h-screen bg-background">
@@ -23,7 +24,7 @@ const Orders = () => {
                 <th className="p-3 border-b border-border">Order ID</th>
                 <th className="p-3 border-b border-border">Menu</th>
                 <th className="p-3 border-b border-border">Quantity</th>
-                <th className="p-3 border-b border-border">Subtotal</th>
+                {isManager && <th className="p-3 border-b border-border">Subtotal</th>}
                 <th className="p-3 border-b border-border">Status</th>
               </tr>
             </thead>
@@ -33,13 +34,13 @@ const Orders = () => {
                   <td className="p-3 border-b border-border">{order.id}</td>
                   <td className="p-3 border-b border-border">{order.menu}</td>
                   <td className="p-3 border-b border-border">{order.quantity}</td>
-                  <td className="p-3 border-b border-border">{order.subtotal}฿</td>
+                  {isManager && <td className="p-3 border-b border-border">{order.subtotal}฿</td>}
                   <td className="p-3 border-b border-border">{order.status}</td>
                 </tr>
               ))}
               {orders.length === 0 && (
                 <tr>
-                  <td className="p-3" colSpan={5}>
+                  <td className="p-3" colSpan={isManager ? 5 : 4}>
                     No orders available.
                   </td>
                 </tr>
