@@ -4,9 +4,9 @@ import { useState } from 'react';
 const Orders = () => {
   // Mock data
   const [orders] = useState([
-    { id: 1, menu: 'Chocolate Cake', status: 'Pending', quantity: 1, subtotal: 250 },
-    { id: 2, menu: 'Vanilla Cake', status: 'Confirmed', quantity: 2, subtotal: 400 },
-    { id: 3, menu: 'Strawberry Cake', status: 'Preparing', quantity: 1, subtotal: 300 },
+    { id: 1, menu: 'Chocolate Cake', status: 'Pending', quantity: 1 },
+    { id: 2, menu: 'Vanilla Cake', status: 'Confirmed', quantity: 2},
+    { id: 3, menu: 'Strawberry Cake', status: 'Preparing', quantity: 1},
   ]);
 
   return (
