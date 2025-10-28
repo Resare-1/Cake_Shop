@@ -103,77 +103,40 @@
 import React, { useState } from 'react';
 import TaskBar from './components/TaskBar';
 import MainContent from './components/MainContent';
-import Login from './components/Login';
 
 export default function App() {
   const [active, setActive] = useState('menu');
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || 'null'));
 
-  // -----------------------------
-  // MOCK login function (replace with real API call later)
-  // -----------------------------
-  const loginUser = async (username, password) => {
-    // Simulate backend check
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Mock users
-        const users = [
-          { username: 'manager', role: 'Manager', fullname: 'Manager Account' },
-          { username: 'admin', role: 'Admin', fullname: 'Admin Account' },
-          { username: 'staff', role: 'Staff', fullname: 'Staff Account' },
-        ];
-
-        const found = users.find(u => u.username === username);
-        if (!found) return reject('Invalid username');
-        if (!password) return reject('Invalid password'); // Simple check
-
-        resolve({ user: found, token: 'mock-token-123' });
-      }, 500); // simulate network delay
-    });
+  // Mock user selection for frontend testing
+  const mockUsers = {
+    manager: { username: 'manager', role: 'Manager', fullname: 'Manager Account' },
+    admin: { username: 'admin', role: 'Admin', fullname: 'Admin Account' },
+    staff: { username: 'staff', role: 'Staff', fullname: 'Staff Account' },
   };
 
-  if (!user)
-    return (
-      <Login
-        onLogin={async (u, t) => {
-          // -----------------------------
-          // New login integration (mock)
-          // -----------------------------
-          try {
-            const result = await loginUser(u.username, u.password);
-            localStorage.setItem('token', result.token);
-            localStorage.setItem('user', JSON.stringify(result.user));
-            setUser(result.user);
-
-            // Reset active page for new user
-            setActive('menu');
-            console.log('Login successful (mock)');
-          } catch (err) {
-            alert(err);
-          }
-
-          // -----------------------------
-          // Existing code preserved
-          // -----------------------------
-          // localStorage.setItem('token', t);
-          // localStorage.setItem('user', JSON.stringify(u));
-          // setUser(u);
-          // setActive('menu');
-        }}
-      />
-    );
+  const [user, setUser] = useState(mockUsers.manager); // default: manager
 
   const handleLogout = () => {
-    // Clear storage
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-
-    // Reset all state to default
     setUser(null);
-    setActive('menu'); // reset active tab to default
-
-    console.log('Logged out successfully');
+    setActive('menu');
   };
+
+  // If no user, show quick role selector for testing
+  if (!user)
+    return (
+      <div className="p-6">
+        <h2>Select role to simulate login</h2>
+        {Object.keys(mockUsers).map((key) => (
+          <button
+            key={key}
+            className="m-2 px-4 py-2 bg-blue-500 text-white rounded"
+            onClick={() => setUser(mockUsers[key])}
+          >
+            {mockUsers[key].role}
+          </button>
+        ))}
+      </div>
+    );
 
   return (
     <div className="flex h-screen">
@@ -187,4 +150,3 @@ export default function App() {
     </div>
   );
 }
-

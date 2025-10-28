@@ -25,11 +25,11 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
       return [
         { key: 'menu', label: 'Menu', icon: MenuIcon },
         { key: 'orders', label: 'Orders', icon: ShoppingBag },
-        { key: 'ingredients', label: 'Ingredients Management', icon: Package },
-        { key: 'confirm-order', label: 'Confirm Order', icon: ShoppingBag },
-        { key: 'add-menu', label: 'Add New Menu', icon: ShoppingBag },
-        { key: 'disable-menu', label: 'Disable Menu', icon: ShoppingBag },
-        { key: 'add-ingredients', label: 'Add New Ingredient', icon: ShoppingBag },
+        { key: 'menu-manage', label: 'Menu Manager', icon: ShoppingBag},
+        { key: 'orders-manage', label: 'Orders Manager', icon: ShoppingBag},
+        { key: 'ingredients', label: 'Ingredients Manager', icon: Package },
+        { key: 'employees', label: 'Employees Manager', icon: ShoppingBag },
+
       ];
     }
 
