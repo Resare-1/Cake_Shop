@@ -27,7 +27,7 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
         { key: 'orders', label: 'Orders', icon: ShoppingBag },
         { key: 'menu-manage', label: 'Menu Manager', icon: ShoppingBag},
         { key: 'orders-manage', label: 'Orders Manager', icon: ShoppingBag},
-        { key: 'ingredients', label: 'Ingredients Manager', icon: Package },
+        { key: 'ingredients', label: 'Stock Manager', icon: Package },
         { key: 'employees', label: 'Employees Manager', icon: ShoppingBag },
 
       ];

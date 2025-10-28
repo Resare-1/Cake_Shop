@@ -1,11 +1,13 @@
 // MainContent.jsx
 import SendOrder from './pages/SendOrder';
-// You can add more pages later for Admin / Manager
 import Orders from './pages/Orders';
 import Ingredients from './pages/Ingredients';
 import TakeOrder from './pages/TakeOrder';
 import FixOrder from './pages/FixOrder';
 import OrdersManager from './pages/OrdersManager';
+import Employees from './pages/Employees';
+import MenuManager from './pages/MenuManager';
+import Menu from './pages/Menu';
 
 const MainContent = ({ active }) => {
   switch (active) {
@@ -21,6 +23,12 @@ const MainContent = ({ active }) => {
       return <OrdersManager />
     case 'ingredients':
       return <Ingredients />
+    case 'employees':
+      return <Employees />
+    case 'menu-manage':
+      return <MenuManager />
+    case 'menu':
+      return <Menu />
 
     default:
       // Fallback to original generic placeholder
