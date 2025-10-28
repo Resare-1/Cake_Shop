@@ -5,6 +5,7 @@ import Orders from './pages/Orders';
 import Menu from './pages/Menu';
 import Ingredients from './pages/Ingredients';
 import TakeOrder from './pages/TakeOrder';
+import FixOrder from './pages/FixOrder';
 
 const MainContent = ({ active }) => {
   switch (active) {
@@ -14,8 +15,8 @@ const MainContent = ({ active }) => {
       return <Orders />; // Placeholder page
     case 'take-order':
      return <TakeOrder />; 
-    //case 'ingredients':
-    //  return <Ingredients />; // Manager page
+    case 'fix-order':
+      return <FixOrder />; 
 
     default:
       // Fallback to original generic placeholder
