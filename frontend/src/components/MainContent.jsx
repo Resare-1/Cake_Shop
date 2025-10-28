@@ -2,7 +2,6 @@
 import SendOrder from './pages/SendOrder';
 // You can add more pages later for Admin / Manager
 import Orders from './pages/Orders';
-import Menu from './pages/Menu';
 import Ingredients from './pages/Ingredients';
 import TakeOrder from './pages/TakeOrder';
 import FixOrder from './pages/FixOrder';
@@ -20,6 +19,8 @@ const MainContent = ({ active }) => {
       return <FixOrder />; 
     case 'orders-manage':
       return <OrdersManager />
+    case 'ingredients':
+      return <Ingredients />
 
     default:
       // Fallback to original generic placeholder
