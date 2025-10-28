@@ -1,12 +1,42 @@
 import { LogOut, Menu as MenuIcon, ShoppingBag, Package } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from '../components/ui/button';
 
 const TaskBar = ({ active, setActive, user, onLogout }) => {
-  const items = [
-    { key: 'menu', label: 'Menu', icon: MenuIcon },
-    { key: 'orders', label: 'Orders', icon: ShoppingBag },
-    { key: 'ingredients', label: 'Ingredients', icon: Package },
-  ];
+  // Define menu items based on role
+  const getMenuItems = () => {
+    const role = user.role.toLowerCase();
+
+    if (role === 'staff') {
+      return [
+        { key: 'orders', label: 'Orders', icon: ShoppingBag },
+        { key: 'take-order', label: 'Take Order', icon: MenuIcon },
+        { key: 'fix-order', label: 'Fix Order', icon: MenuIcon}
+      ];
+    }
+
+    if (role === 'admin') {
+      return [
+        { key: 'orders', label: 'Orders', icon: ShoppingBag },
+        { key: 'send-order', label: 'Send Order to Kitchen', icon: ShoppingBag }
+      ];
+    }
+
+    if (role === 'manager') {
+      return [
+        { key: 'menu', label: 'Menu', icon: MenuIcon },
+        { key: 'orders', label: 'Orders', icon: ShoppingBag },
+        { key: 'ingredients', label: 'Ingredients Management', icon: Package },
+        { key: 'confirm-order', label: 'Confirm Order', icon: ShoppingBag },
+        { key: 'add-menu', label: 'Add New Menu', icon: ShoppingBag },
+        { key: 'disable-menu', label: 'Disable Menu', icon: ShoppingBag },
+        { key: 'add-ingredients', label: 'Add New Ingredient', icon: ShoppingBag },
+      ];
+    }
+
+    return [];
+  };
+
+  const items = getMenuItems();
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar-bg text-sidebar-text flex flex-col shadow-lg">
@@ -49,7 +79,7 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
       </nav>
 
       {/* Manager Export Button */}
-      {user.role === 'Manager' && (
+      {user.role.toLowerCase() === 'manager' && (
         <div className="p-4 border-t border-sidebar-text/20">
           <Button
             onClick={() => window.open('http://localhost:3001/api/report/finance', '_blank')}

@@ -10,9 +10,18 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     // Simple demo login - replace with real auth later
     if (username && password) {
+      let role = 'staff';
+      const usernameLower = username.toLowerCase();
+      
+      if (usernameLower.includes('manager')) {
+        role = 'manager';
+      } else if (usernameLower.includes('admin')) {
+        role = 'admin';
+      }
+      
       onLogin({
         username: username,
-        role: username.toLowerCase().includes('manager') ? 'Manager' : 'Staff'
+        role: role
       });
     }
   };
@@ -57,7 +66,7 @@ const Login = ({ onLogin }) => {
         </form>
 
         <p className="text-xs text-muted-foreground mt-4 text-center">
-          Tip: Use "manager" in username for Manager role
+          Tip: Use "manager", "admin", or "staff" in username for roles
         </p>
       </div>
     </div>

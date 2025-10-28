@@ -15,8 +15,15 @@ export default function App() {
     setUser(u);
 }} />;
   const handleLogout = () => {
-    console.log('Logout clicked');
-  };
+  // Remove user info and token from localStorage
+  localStorage.removeItem('user');
+  localStorage.removeItem('token');
+
+  // Reset user state so the login component appears
+  setUser(null);
+
+  console.log('Logged out successfully');
+};
 
   return (
     <div className="flex h-screen">
