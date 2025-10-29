@@ -36,12 +36,19 @@ export const submitOrder = async (orderData) => {
 //};
 
 // ✅ Update status for an order (e.g., Processing / Complete / Cancel)
-export const updateOrderStatus = async (orderId, newStatus) => {
+export const updateOrderStatus = async (orderId, newStatus, note) => {
   try {
+    const body = { Order_Status: newStatus };
+
+    // Only include Note if it actually changed
+    if (note !== undefined && note !== null) {
+      body.Note = note;
+    }
+
     const res = await fetch(`/api/orders/${orderId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ Order_Status: newStatus }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) throw new Error('Failed to update order status');
@@ -51,6 +58,7 @@ export const updateOrderStatus = async (orderId, newStatus) => {
     throw err;
   }
 };
+
 
 // ✅ Mock orders for testing
 export const getOrders = async () => {
@@ -67,53 +75,93 @@ export const getOrders = async () => {
   ];
 
   // mock orders
-  return [
-    {
-      id: 1,
-      customer: 'John Doe',
-      status: 'Pending',
-      items: [
-        {
-          menuId: menus[0].id,
-          menuName: menus[0].name,
-          quantity: 1,
-          note: 'ช็อกโกแลตเข้มข้น',
-          ingredients: [
-            { name: 'Flour', qty_required: 200, unit: 'g' },
-            { name: 'Chocolate', qty_required: 100, unit: 'g' },
-            { name: 'Sugar', qty_required: 50, unit: 'g' },
-          ],
-        },
-        {
-          menuId: menus[1].id,
-          menuName: menus[1].name,
-          quantity: 2,
-          note: '',
-          ingredients: [
-            { name: 'Flour', qty_required: 200, unit: 'g' },
-            { name: 'Vanilla', qty_required: 50, unit: 'g' },
-            { name: 'Sugar', qty_required: 50, unit: 'g' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 2,
-      customer: 'Jane Smith',
-      status: 'Pending',
-      items: [
-        {
-          menuId: menus[2].id,
-          menuName: menus[2].name,
-          quantity: 1,
-          note: 'ไม่มี',
-          ingredients: [
-            { name: 'Flour', qty_required: 200, unit: 'g' },
-            { name: 'Strawberry', qty_required: 100, unit: 'g' },
-            { name: 'Sugar', qty_required: 50, unit: 'g' },
-          ],
-        },
-      ],
-    },
-  ];
+ return [
+  // Original orders (unchanged)
+  {
+    id: 1,
+    customer: 'John Doe',
+    status: 'Pending',
+    items: [
+      {
+        menuId: menus[0].id,
+        menuName: menus[0].name,
+        quantity: 1,
+        note: 'ช็อกโกแลตเข้มข้น',
+        ingredients: [
+          { name: 'Flour', qty_required: 200, unit: 'g' },
+          { name: 'Chocolate', qty_required: 100, unit: 'g' },
+          { name: 'Sugar', qty_required: 50, unit: 'g' },
+        ],
+      },
+      {
+        menuId: menus[1].id,
+        menuName: menus[1].name,
+        quantity: 2,
+        note: '',
+        ingredients: [
+          { name: 'Flour', qty_required: 200, unit: 'g' },
+          { name: 'Vanilla', qty_required: 50, unit: 'g' },
+          { name: 'Sugar', qty_required: 50, unit: 'g' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 2,
+    customer: 'Jane Smith',
+    status: 'Pending',
+    items: [
+      {
+        menuId: menus[2].id,
+        menuName: menus[2].name,
+        quantity: 1,
+        note: 'ไม่มี',
+        ingredients: [
+          { name: 'Flour', qty_required: 200, unit: 'g' },
+          { name: 'Strawberry', qty_required: 100, unit: 'g' },
+          { name: 'Sugar', qty_required: 50, unit: 'g' },
+        ],
+      },
+    ],
+  },
+
+  // New orders for testing CheckOrder
+  {
+    id: 3,
+    customer: 'Alice Johnson',
+    status: 'CheckOrder',
+    items: [
+      {
+        menuId: menus[3].id,
+        menuName: menus[3].name,
+        quantity: 1,
+        note: 'เปรี้ยวหน่อย',
+        ingredients: [
+          { name: 'Flour', qty_required: 200, unit: 'g' },
+          { name: 'Lemon', qty_required: 50, unit: 'g' },
+          { name: 'Sugar', qty_required: 50, unit: 'g' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 4,
+    customer: 'Bob Brown',
+    status: 'CheckOrder',
+    items: [
+      {
+        menuId: menus[4].id,
+        menuName: menus[4].name,
+        quantity: 2,
+        note: 'นุ่ม ๆ',
+        ingredients: [
+          { name: 'Flour', qty_required: 200, unit: 'g' },
+          { name: 'Red Velvet', qty_required: 100, unit: 'g' },
+          { name: 'Sugar', qty_required: 50, unit: 'g' },
+        ],
+      },
+    ],
+  },
+];
+
 }
