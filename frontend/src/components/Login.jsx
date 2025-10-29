@@ -8,21 +8,11 @@ const Login = ({ onLogin }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simple demo login - replace with real auth later
+    // ต้องเช็คทั้ง username และ password
     if (username && password) {
-      let role = 'staff';
-      const usernameLower = username.toLowerCase();
-      
-      if (usernameLower.includes('manager')) {
-        role = 'manager';
-      } else if (usernameLower.includes('admin')) {
-        role = 'admin';
-      }
-      
-      onLogin({
-        username: username,
-        role: role
-      });
+      onLogin({ username, password }); // ส่งไป backend จริง
+    } else {
+      alert('Username and password are required');
     }
   };
 
@@ -66,7 +56,7 @@ const Login = ({ onLogin }) => {
         </form>
 
         <p className="text-xs text-muted-foreground mt-4 text-center">
-          Tip: Use "manager", "admin", or "staff" in username for roles
+          
         </p>
       </div>
     </div>
