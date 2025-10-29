@@ -7,6 +7,8 @@ export const createOrder = (menu, notes) => {
     order_id: Date.now(),
     menu_id: menu.id,
     name: menu.name,
-    note
+    note,
+    status: 'Pending',
+    order_date: new Date().toISOString()
   };
 };

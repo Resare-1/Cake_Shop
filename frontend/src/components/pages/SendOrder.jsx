@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { createOrder } from '../../lib/createOrderUtils';
 import { getMenus } from '../../api/menuApi';
-import { submitOrders } from '../../api/submitOrderApi';
+import { submitOrder } from '../../api/orderApi';
 
 const SendOrder = () => {
   const [menus, setMenus] = useState([]);
