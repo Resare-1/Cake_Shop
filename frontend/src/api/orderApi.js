@@ -43,3 +43,23 @@ export const updateOrderStatus = async (orderId, Order_Status, token, Note) => {
 
   return res.json();
 };
+
+export const submitOrders = async ({ orders, Deadline }) => {
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error("No authentication token");
+
+  const res = await fetch('http://localhost:3006/api/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ orders, Deadline }) // ส่ง deadline ด้วย
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || 'Failed to submit orders');
+  }
+  return res.json();
+};

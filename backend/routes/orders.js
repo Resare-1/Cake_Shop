@@ -97,4 +97,50 @@ router.put('/:id', authenticateJWT, async (req, res) => {
   }
 });
 
+
+// POST /api/orders
+router.post('/', authenticateJWT, async (req, res) => {
+  const StaffID = req.user.StaffID; // เอา StaffID จาก JWT
+  const { orders, Deadline } = req.body; // รับ orders + Deadline จาก frontend
+
+  if (!orders || !orders.length) 
+    return res.status(400).json({ error: 'No orders provided' });
+
+  if (!Deadline) 
+    return res.status(400).json({ error: 'Deadline is required' });
+
+  // ตรวจสอบว่า Deadline >= วันนี้ + 1 วัน
+  const deadlineDate = new Date(Deadline);
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() + 1);
+  if (deadlineDate < minDate) {
+    return res.status(400).json({ error: 'Deadline ต้องไม่น้อยกว่า 1 วันจากวันนี้' });
+  }
+
+  try {
+    // 1. สร้าง Order Master
+    const [orderResult] = await pool.query(
+      'INSERT INTO `Order` (StaffID, Order_Status, Order_date, Order_deadline) VALUES (?, ?, NOW(), ?)',
+      [StaffID, 'Pending', Deadline]
+    );
+    const orderId = orderResult.insertId;
+
+
+      // 2. สร้าง Order Items
+      const itemValues = orders.map(o => [
+        orderId, o.MenuID, o.Quantity
+      ]);
+      await pool.query(
+        'INSERT INTO Order_Item (Order_id, MenuID, Quantity) VALUES ?',
+        [itemValues]
+      );
+
+
+    res.json({ success: true, orderId, message: 'Order created successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create order' });
+  }
+});
+
 export default router;
