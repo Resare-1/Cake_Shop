@@ -50,7 +50,6 @@ const SendOrder = () => {
             <div className="flex-1">
               <h2 className="font-semibold text-lg">{menu.name}</h2>
               <p className="text-sm text-muted-foreground">{menu.description}</p>
-              <p className="font-medium mt-1">{menu.price}฿</p>
 
               {/* Independent note field */}
               <textarea
@@ -70,18 +69,6 @@ const SendOrder = () => {
         ))}
       </div>
 
-      {orders.length > 0 && (
-        <div className="bg-card p-4 border rounded-lg mt-4">
-          <h2 className="font-semibold mb-2">คำสั่งซื้อปัจจุบัน</h2>
-          <ul className="space-y-1">
-            {orders.map((o) => (
-              <li key={o.order_id}>
-                {o.name} - {o.subtotal}฿ ({o.note})
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 };
