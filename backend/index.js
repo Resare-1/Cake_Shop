@@ -7,6 +7,8 @@ import authRoutes from './routes/auth.js';
 import menuRouter from './routes/menus.js';
 import orderRouter from './routes/orders.js';
 import ingredientsRouter from './routes/ingredients.js';
+import staffRouter from "./routes/staff.js";
+import reportRouter from "./routes/report.js";
 // import other routes later: menuRoutes, orderRoutes, etc.
 
 dotenv.config();
@@ -20,7 +22,8 @@ app.use('/api', authRoutes); // login => POST /api/login
 app.use('/api/menus', menuRouter); // GET /api/menu
 app.use('/api/orders', orderRouter);//
 app.use('/api/ingredients', ingredientsRouter);
-
+app.use("/api/staff", staffRouter);
+app.use("/api/report", reportRouter);
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`✅ Backend running on port ${PORT}`);

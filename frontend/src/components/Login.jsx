@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
+import { useState } from "react";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+
 
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -8,9 +9,8 @@ const Login = ({ onLogin }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // ต้องเช็คทั้ง username และ password
     if (username && password) {
-      onLogin({ username, password }); // ส่งไป backend จริง
+      onLogin({ username, password });
     } else {
       alert('Username and password are required');
     }
@@ -54,10 +54,6 @@ const Login = ({ onLogin }) => {
             Login
           </Button>
         </form>
-
-        <p className="text-xs text-muted-foreground mt-4 text-center">
-          
-        </p>
       </div>
     </div>
   );

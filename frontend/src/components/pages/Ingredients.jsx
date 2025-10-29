@@ -1,65 +1,66 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Card, CardContent } from "../ui/card";
+import { getAllIngredients, addIngredient, updateIngredientStock } from "../../api/ingredientApi";
+
 
 export default function IngredientsManager() {
-  const [ingredients, setIngredients] = useState([
-    { id: 1, name: "Flour", quantity: 50, unit: "kg" },
-    { id: 2, name: "Sugar", quantity: 30, unit: "kg" },
-    { id: 3, name: "Butter", quantity: 10, unit: "kg" },
-  ]);
-
-  const [newIngredient, setNewIngredient] = useState({
-    name: "",
-    unit: "",
-    quantity: 0,
-  });
-
-  // Object to store typed delta for each ingredient
+  const [ingredients, setIngredients] = useState([]);
+  const [newIngredient, setNewIngredient] = useState({ name: "", unit: "", quantity: 0 });
   const [editQty, setEditQty] = useState({});
+
+  // ดึง ingredient จาก backend
+const fetchIngredients = async () => {
+  try {
+    const data = await getAllIngredients();
+    setIngredients(data);
+  } catch (err) {
+    console.error(err);
+    alert("ไม่สามารถโหลด ingredients ได้");
+  }
+};
+
+  useEffect(() => {
+    fetchIngredients();
+  }, []);
 
   // -----------------------------
   // Update stock based on delta input
   // -----------------------------
-  const updateStock = (id) => {
+  const handleUpdateStock = async (id) => {
     const delta = parseInt(editQty[id]) || 0;
-    setIngredients((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const newQty = item.quantity + delta;
-          if (newQty < 0) {
-            alert("Quantity cannot be negative");
-            return item;
-          }
-          return { ...item, quantity: newQty };
-        }
-        return item;
-      })
-    );
-    setEditQty((prev) => ({ ...prev, [id]: "" })); // Clear input
-    alert("Stock updated successfully!");
+    if (delta === 0) return;
+
+    try {
+      await updateIngredientStock(id, delta);
+      alert("Stock updated successfully!");
+      setEditQty((prev) => ({ ...prev, [id]: "" }));
+      fetchIngredients();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update stock");
+    }
   };
 
   // -----------------------------
   // Add new ingredient
   // -----------------------------
-  const addIngredient = () => {
+  const handleAddIngredient = async () => {
     if (!newIngredient.name || !newIngredient.unit) {
       alert("Name and unit cannot be empty");
       return;
     }
 
-    const newItem = {
-      id: ingredients.length + 1,
-      name: newIngredient.name,
-      quantity: newIngredient.quantity || 0,
-      unit: newIngredient.unit,
-    };
-
-    setIngredients([...ingredients, newItem]);
-    setNewIngredient({ name: "", unit: "", quantity: 0 });
-    alert("New ingredient added!");
+    try {
+      await addIngredient(newIngredient);
+      alert("New ingredient added!");
+      setNewIngredient({ name: "", unit: "", quantity: 0 });
+      fetchIngredients();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add ingredient");
+    }
   };
 
   return (
@@ -81,25 +82,25 @@ export default function IngredientsManager() {
               </thead>
               <tbody>
                 {ingredients.map((item) => (
-                  <tr key={item.id}>
-                    <td className="border p-2">{item.name}</td>
-                    <td className="border p-2">{item.quantity}</td>
-                    <td className="border p-2">{item.unit}</td>
+                  <tr key={item.IngredientID}>
+                    <td className="border p-2">{item.IngredientName}</td>
+                    <td className="border p-2">{item.Quantity}</td>
+                    <td className="border p-2">{item.Unit}</td>
                     <td className="border p-2 text-center">
                       <div className="flex justify-center items-center space-x-2">
                         <input
                           type="number"
                           placeholder="Change"
                           className="w-20 p-1 border rounded text-center"
-                          value={editQty[item.id] ?? ""}
+                          value={editQty[item.IngredientID] ?? ""}
                           onChange={(e) =>
                             setEditQty((prev) => ({
                               ...prev,
-                              [item.id]: e.target.value,
+                              [item.IngredientID]: e.target.value,
                             }))
                           }
                         />
-                        <Button onClick={() => updateStock(item.id)}>Update</Button>
+                        <Button onClick={() => handleUpdateStock(item.IngredientID)}>Update</Button>
                       </div>
                     </td>
                   </tr>
@@ -117,16 +118,12 @@ export default function IngredientsManager() {
           <Input
             placeholder="Ingredient Name"
             value={newIngredient.name}
-            onChange={(e) =>
-              setNewIngredient({ ...newIngredient, name: e.target.value })
-            }
+            onChange={(e) => setNewIngredient({ ...newIngredient, name: e.target.value })}
           />
           <Input
             placeholder="Unit (e.g. kg, ml)"
             value={newIngredient.unit}
-            onChange={(e) =>
-              setNewIngredient({ ...newIngredient, unit: e.target.value })
-            }
+            onChange={(e) => setNewIngredient({ ...newIngredient, unit: e.target.value })}
           />
           <Input
             type="number"
@@ -140,7 +137,7 @@ export default function IngredientsManager() {
             }
           />
           <div className="flex justify-center">
-            <Button onClick={addIngredient}>Add Ingredient</Button>
+            <Button onClick={handleAddIngredient}>Add Ingredient</Button>
           </div>
         </CardContent>
       </Card>

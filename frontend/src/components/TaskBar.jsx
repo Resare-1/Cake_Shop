@@ -1,5 +1,35 @@
 import { LogOut, Menu as MenuIcon, ShoppingBag, Package } from 'lucide-react';
 import { Button } from '../components/ui/button';
+const exportCSV = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) return alert("You must login first");
+
+  try {
+    const res = await fetch("http://localhost:3006/api/report/sales", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error || "Failed to export CSV");
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sales_report.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+};
 
 const TaskBar = ({ active, setActive, user, onLogout }) => {
   // Define menu items based on role
@@ -81,12 +111,12 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
       {/* Manager Export Button */}
       {user.role.toLowerCase() === 'manager' && (
         <div className="p-4 border-t border-sidebar-text/20">
-          <Button
-            onClick={() => window.open('http://localhost:3001/api/report/finance', '_blank')}
-            className="w-full bg-sidebar-text text-sidebar-bg hover:bg-sidebar-text/90"
-          >
-            Export Finance CSV
-          </Button>
+        <Button
+          onClick={exportCSV}
+          className="w-full bg-sidebar-text text-sidebar-bg hover:bg-sidebar-text/90"
+        >
+          Export Sales CSV
+        </Button>
         </div>
       )}
     </aside>
