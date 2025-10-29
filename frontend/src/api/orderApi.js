@@ -1,53 +1,94 @@
-// src/api/submitOrderApi.js
+const API_URL = "http://localhost:3006/api/orders";
 
-// ✅ Create a new order (with items)
-export const submitOrder = async (orderData) => {
+/**
+ * Submit a new order
+ * @param {Object} orderData - { StaffID, Note, items: [{ MenuID, Quantity, Subtotal }] }
+ * @param {string} token - JWT token
+ */
+export const submitOrder = async (orderData, token) => {
+  if (!token) throw new Error("Missing authentication token");
+
   try {
-    const res = await fetch('/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
-        StaffID: orderData.StaffID || null, // optional, backend may fill from session
-        Order_Status: 'Pending',
+        StaffID: orderData.StaffID || null, // backend เติมให้ถ้า null
+        Order_Status: "Pending",
         Order_date: new Date().toISOString(),
-        Note: orderData.Note || '',
-        items: orderData.items || [] // [{ MenuID, Quantity, Subtotal }]
+        Note: orderData.Note || "",
+        items: orderData.items || [], // [{ MenuID, Quantity, Subtotal }]
       }),
     });
 
-    if (!res.ok) throw new Error('Failed to submit order');
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "Failed to submit order");
+    }
+
     return await res.json();
   } catch (err) {
-    console.error('Error submitting order:', err);
+    console.error("Error submitting order:", err);
     throw err;
   }
 };
 
-// ✅ Fetch all existing orders
-export const getOrders = async () => {
+/**
+ * Get all orders
+ * @param {string} token - JWT token
+ */
+export const getOrders = async (token) => {
+  if (!token) throw new Error("Missing authentication token");
+
   try {
-    const res = await fetch('/api/orders');
-    if (!res.ok) throw new Error('Failed to fetch orders');
+    const res = await fetch(API_URL, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "Failed to fetch orders");
+    }
+
     return await res.json();
   } catch (err) {
-    console.error('Error fetching orders:', err);
+    console.error("Error fetching orders:", err);
     throw err;
   }
 };
 
-// ✅ Update status for an order (e.g., Processing / Complete / Cancel)
-export const updateOrderStatus = async (orderId, newStatus) => {
+/**
+ * Update order status
+ * @param {number} orderId
+ * @param {string} newStatus - Pending / Processing / Complete
+ * @param {string} token - JWT token
+ */
+export const updateOrderStatus = async (orderId, newStatus, token) => {
+  if (!token) throw new Error("Missing authentication token");
+
   try {
-    const res = await fetch(`/api/orders/${orderId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch(`${API_URL}/${orderId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ Order_Status: newStatus }),
     });
 
-    if (!res.ok) throw new Error('Failed to update order status');
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "Failed to update order status");
+    }
+
     return await res.json();
   } catch (err) {
-    console.error('Error updating order status:', err);
+    console.error("Error updating order status:", err);
     throw err;
   }
 };

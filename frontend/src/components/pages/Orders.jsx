@@ -1,14 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useState } from "react";
+import { getOrders, updateOrderStatus } from "../../api/orderApi";
 
-const Orders = ({ userRole }) => {
-  // Mock data
-  const [orders] = useState([
-    { id: 1, menu: 'Chocolate Cake', status: 'Pending', quantity: 1, subtotal: 250 },
-    { id: 2, menu: 'Vanilla Cake', status: 'Confirmed', quantity: 2, subtotal: 400 },
-    { id: 3, menu: 'Strawberry Cake', status: 'Preparing', quantity: 1, subtotal: 300 },
-  ]);
+const Orders = ({ user }) => {
+  const [orders, setOrders] = useState([]);
+  const token = localStorage.getItem("token");
+  const isManager = user?.role?.toLowerCase() === "manager";
 
-  const isManager = userRole?.toLowerCase() === 'manager';
+  // fetch orders จาก backend
+  const fetchOrders = async () => {
+    try {
+      const data = await getOrders(token);
+      setOrders(data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to fetch orders");
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  // เปลี่ยน status ของ order (เฉพาะ manager)
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await updateOrderStatus(orderId, newStatus, token);
+      fetchOrders(); // refresh list
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update status");
+    }
+  };
 
   return (
     <div className="ml-64 p-8 min-h-screen bg-background">
@@ -22,29 +44,67 @@ const Orders = ({ userRole }) => {
             <thead>
               <tr className="bg-gray-100 text-left">
                 <th className="p-3 border-b border-border">Order ID</th>
-                <th className="p-3 border-b border-border">Menu</th>
+                <th className="p-3 border-b border-border">Menus</th>
                 <th className="p-3 border-b border-border">Quantity</th>
                 {isManager && <th className="p-3 border-b border-border">Subtotal</th>}
                 <th className="p-3 border-b border-border">Status</th>
+                {isManager && <th className="p-3 border-b border-border">Action</th>}
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="p-3 border-b border-border">{order.id}</td>
-                  <td className="p-3 border-b border-border">{order.menu}</td>
-                  <td className="p-3 border-b border-border">{order.quantity}</td>
-                  {isManager && <td className="p-3 border-b border-border">{order.subtotal}฿</td>}
-                  <td className="p-3 border-b border-border">{order.status}</td>
-                </tr>
-              ))}
               {orders.length === 0 && (
                 <tr>
-                  <td className="p-3" colSpan={isManager ? 5 : 4}>
+                  <td className="p-3" colSpan={isManager ? 6 : 5}>
                     No orders available.
                   </td>
                 </tr>
               )}
+              {orders.map((order) => (
+                <tr key={order.Order_id} className="hover:bg-gray-50">
+                  <td className="p-3 border-b border-border">{order.Order_id}</td>
+
+                  <td className="p-3 border-b border-border">
+                    {order.items.map(item => (
+                      <div key={item.MenuID}>
+                        {item.MenuName} x{item.Quantity}
+                      </div>
+                    ))}
+                  </td>
+
+                  <td className="p-3 border-b border-border">
+                    {order.items.reduce((sum, i) => sum + i.Quantity, 0)}
+                  </td>
+
+                  {isManager && (
+                    <td className="p-3 border-b border-border">
+                      {order.items.reduce((sum, i) => sum + i.Subtotal, 0)}฿
+                    </td>
+                  )}
+
+                  <td className="p-3 border-b border-border">{order.Order_Status}</td>
+
+                  {isManager && (
+                    <td className="p-3 border-b border-border space-x-2">
+                      {order.Order_Status === "Pending" && (
+                        <button
+                          className="px-2 py-1 bg-blue-500 text-white rounded"
+                          onClick={() => handleStatusChange(order.Order_id, "Processing")}
+                        >
+                          Processing
+                        </button>
+                      )}
+                      {order.Order_Status === "Processing" && (
+                        <button
+                          className="px-2 py-1 bg-green-500 text-white rounded"
+                          onClick={() => handleStatusChange(order.Order_id, "Complete")}
+                        >
+                          Complete
+                        </button>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
