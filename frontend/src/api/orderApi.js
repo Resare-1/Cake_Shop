@@ -1,4 +1,4 @@
-// src/api/submitOrderApi.js
+// src/api/orderApi.js
 
 // ✅ Create a new order (with items)
 export const submitOrder = async (orderData) => {
@@ -24,16 +24,16 @@ export const submitOrder = async (orderData) => {
 };
 
 // ✅ Fetch all existing orders
-export const getOrders = async () => {
-  try {
-    const res = await fetch('/api/orders');
-    if (!res.ok) throw new Error('Failed to fetch orders');
-    return await res.json();
-  } catch (err) {
-    console.error('Error fetching orders:', err);
-    throw err;
-  }
-};
+//export const getOrders = async () => {
+//  try {
+//    const res = await fetch('/api/orders');
+//    if (!res.ok) throw new Error('Failed to fetch orders');
+//    return await res.json();
+//  } catch (err) {
+//    console.error('Error fetching orders:', err);
+//    throw err;
+//  }
+//};
 
 // ✅ Update status for an order (e.g., Processing / Complete / Cancel)
 export const updateOrderStatus = async (orderId, newStatus) => {
@@ -51,3 +51,69 @@ export const updateOrderStatus = async (orderId, newStatus) => {
     throw err;
   }
 };
+
+// ✅ Mock orders for testing
+export const getOrders = async () => {
+  // simulate network delay
+  await new Promise((res) => setTimeout(res, 300));
+
+  // mock menu items
+  const menus = [
+    { id: 1, name: 'Chocolate Cake', description: 'Rich dark chocolate cake' },
+    { id: 2, name: 'Vanilla Cake', description: 'Classic vanilla cream cake' },
+    { id: 3, name: 'Strawberry Cake', description: 'Fresh strawberry cake' },
+    { id: 4, name: 'Lemon Cake', description: 'Tangy lemon cake' },
+    { id: 5, name: 'Red Velvet', description: 'Velvety red cake' },
+  ];
+
+  // mock orders
+  return [
+    {
+      id: 1,
+      customer: 'John Doe',
+      status: 'Pending',
+      items: [
+        {
+          menuId: menus[0].id,
+          menuName: menus[0].name,
+          quantity: 1,
+          note: 'ช็อกโกแลตเข้มข้น',
+          ingredients: [
+            { name: 'Flour', qty_required: 200, unit: 'g' },
+            { name: 'Chocolate', qty_required: 100, unit: 'g' },
+            { name: 'Sugar', qty_required: 50, unit: 'g' },
+          ],
+        },
+        {
+          menuId: menus[1].id,
+          menuName: menus[1].name,
+          quantity: 2,
+          note: '',
+          ingredients: [
+            { name: 'Flour', qty_required: 200, unit: 'g' },
+            { name: 'Vanilla', qty_required: 50, unit: 'g' },
+            { name: 'Sugar', qty_required: 50, unit: 'g' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 2,
+      customer: 'Jane Smith',
+      status: 'Pending',
+      items: [
+        {
+          menuId: menus[2].id,
+          menuName: menus[2].name,
+          quantity: 1,
+          note: 'ไม่มี',
+          ingredients: [
+            { name: 'Flour', qty_required: 200, unit: 'g' },
+            { name: 'Strawberry', qty_required: 100, unit: 'g' },
+            { name: 'Sugar', qty_required: 50, unit: 'g' },
+          ],
+        },
+      ],
+    },
+  ];
+}

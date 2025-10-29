@@ -14,10 +14,12 @@
     "tailwindcss": "^3.3.3",
     "tailwindcss-animate": "^1.0.7"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build"
+"scripts": {
+  "start": "react-scripts start",
+  "build": "react-scripts build",
+  "dev": "react-scripts start"
   },
+
   "browserslist": {
     "production": [
       ">0.2%",
