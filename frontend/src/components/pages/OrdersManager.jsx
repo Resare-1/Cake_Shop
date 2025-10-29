@@ -1,8 +1,7 @@
-// src/components/pages/OrdersManager.jsx
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { getOrders, fixOrder, confirmOrder } from '../../api/orderApi';
+import { getOrders, updateOrderStatus } from '../../api/orderApi';
 
 const OrdersManager = () => {
   const [orders, setOrders] = useState([]);
@@ -25,10 +24,11 @@ const OrdersManager = () => {
     fetchOrders();
   }, []);
 
+  // Request fix (เปลี่ยน status เป็น Cancel + note)
   const handleRequestFix = async () => {
     if (!fixNote.trim()) return alert('กรุณากรอก Note ว่าสิ่งที่ต้องการแก้ไข');
     try {
-      await fixOrder(selectedOrder.Order_id, fixNote, token); // backend เปลี่ยน status เป็น 'Cancel'
+      await updateOrderStatus(selectedOrder.Order_id, 'Cancel', token, fixNote);
       alert('ส่งคำสั่งแก้ไขเรียบร้อยแล้ว ระบบแจ้งเตือนไปยัง Staff');
       setSelectedOrder(null);
       setFixNote('');
@@ -39,9 +39,10 @@ const OrdersManager = () => {
     }
   };
 
+  // Confirm order (เปลี่ยน status เป็น Complete)
   const handleConfirmOrder = async () => {
     try {
-      await confirmOrder(selectedOrder.Order_id, token); // backend เปลี่ยน status เป็น 'Completed'
+      await updateOrderStatus(selectedOrder.Order_id, 'Complete', token);
       alert('Order ยืนยันเรียบร้อยแล้ว ระบบแจ้งเตือนไปยัง Staff');
       setSelectedOrder(null);
       fetchOrders();

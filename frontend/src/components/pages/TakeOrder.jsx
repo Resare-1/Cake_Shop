@@ -1,63 +1,30 @@
-// src/components/pages/TakeOrder.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { getOrders } from '../../api/orderApi';
 
 const TakeOrder = () => {
-  // Mock pending orders with nested menu & ingredient info
-  const [orders, setOrders] = useState([
-    {
-      id: 1,
-      customer: 'John Doe',
-      status: 'Pending',
-      items: [
-        {
-          menuId: 1,
-          menuName: 'Chocolate Cake',
-          quantity: 1,
-          note: 'ช็อกโกแลตเข้มข้น',
-          ingredients: [
-            { name: 'Flour', qty_required: 200, unit: 'g' },
-            { name: 'Chocolate', qty_required: 100, unit: 'g' },
-            { name: 'Sugar', qty_required: 50, unit: 'g' },
-          ],
-        },
-        {
-          menuId: 2,
-          menuName: 'Vanilla Cake',
-          quantity: 2,
-          note: '',
-          ingredients: [
-            { name: 'Flour', qty_required: 200, unit: 'g' },
-            { name: 'Vanilla', qty_required: 50, unit: 'g' },
-            { name: 'Sugar', qty_required: 50, unit: 'g' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 2,
-      customer: 'Jane Smith',
-      status: 'Pending',
-      items: [
-        {
-          menuId: 3,
-          menuName: 'Strawberry Cake',
-          quantity: 1,
-          note: 'ไม่มี',
-          ingredients: [
-            { name: 'Flour', qty_required: 200, unit: 'g' },
-            { name: 'Strawberry', qty_required: 100, unit: 'g' },
-            { name: 'Sugar', qty_required: 50, unit: 'g' },
-          ],
-        },
-      ],
-    },
-  ]);
-
+  const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const handleStartProduction = () => {
+  const token = localStorage.getItem('token');
+
+  // ดึง orders จาก backend
+  const fetchOrders = async () => {
+    try {
+      const data = await getOrders(token);
+      setOrders(data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to fetch orders');
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const handleStartProduction = async () => {
     if (!selectedOrder) return alert('กรุณาเลือก Order ก่อน');
 
     const hasEmptyNote = selectedOrder.items.some(
@@ -66,14 +33,21 @@ const TakeOrder = () => {
     if (hasEmptyNote)
       return alert('กรุณาเพิ่ม Note สำหรับทุกเมนู (ถ้าไม่มีให้ใส่ "ไม่มี")');
 
-    // Mock updating status
-    const updatedOrders = orders.map((order) =>
-      order.id === selectedOrder.id ? { ...order, status: 'Processing' } : order
-    );
-    setOrders(updatedOrders);
-
-    alert(`Order #${selectedOrder.id} เริ่มทำเค้กเรียบร้อยแล้ว`);
-    setSelectedOrder(null);
+    try {
+      await fetch(`http://localhost:3006/api/orders/${selectedOrder.Order_id}/start`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      alert(`Order #${selectedOrder.Order_id} เริ่มทำเค้กเรียบร้อยแล้ว`);
+      setSelectedOrder(null);
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
   };
 
   return (
@@ -84,21 +58,21 @@ const TakeOrder = () => {
       <div className="bg-card p-4 rounded-lg shadow-sm border border-border mb-4 max-h-60 overflow-y-auto">
         <h2 className="font-semibold mb-2">Pending Orders</h2>
         {orders
-          .filter((o) => o.status === 'Pending')
+          .filter((o) => o.Order_Status === 'Pending')
           .map((order) => (
             <button
-              key={order.id}
+              key={order.Order_id}
               onClick={() => setSelectedOrder(order)}
               className={`w-full text-left p-3 rounded-md mb-1 border ${
-                selectedOrder?.id === order.id
+                selectedOrder?.Order_id === order.Order_id
                   ? 'border-blue-400 bg-blue-50'
                   : 'border-gray-200'
               }`}
             >
-              Order #{order.id} - {order.customer}
+              Order #{order.Order_id} - Staff: {order.StaffID}
             </button>
           ))}
-        {orders.filter((o) => o.status === 'Pending').length === 0 && (
+        {orders.filter((o) => o.Order_Status === 'Pending').length === 0 && (
           <p>ไม่มี Order รอการทำ</p>
         )}
       </div>
@@ -106,20 +80,16 @@ const TakeOrder = () => {
       {/* Selected Order Details */}
       {selectedOrder && (
         <div className="bg-card p-4 rounded-lg shadow-sm border border-border">
-          <h2 className="font-semibold mb-2">Order #{selectedOrder.id} Details</h2>
+          <h2 className="font-semibold mb-2">Order #{selectedOrder.Order_id} Details</h2>
           {selectedOrder.items.map((item, idx) => (
             <div key={idx} className="mb-4 p-2 border-b border-border">
               <p>
-                <strong>Menu:</strong> {item.menuName} | <strong>Quantity:</strong>{' '}
-                {item.quantity}
-              </p>
-              <p className="mb-2">
-                <strong>Ingredients:</strong>{' '}
-                {item.ingredients.map((ing) => `${ing.name} (${ing.qty_required}${ing.unit})`).join(', ')}
+                <strong>Menu:</strong> {item.MenuName} | <strong>Quantity:</strong>{' '}
+                {item.Quantity} | <strong>Subtotal:</strong> {item.Subtotal}
               </p>
               <Input
                 placeholder="Note (ถ้าไม่มีให้ใส่ 'ไม่มี')"
-                value={item.note}
+                value={item.note || ''}
                 onChange={(e) => {
                   const newItems = [...selectedOrder.items];
                   newItems[idx].note = e.target.value;
@@ -129,7 +99,6 @@ const TakeOrder = () => {
               />
             </div>
           ))}
-
           <Button onClick={handleStartProduction} className="mt-4">
             เริ่มทำเค้ก
           </Button>

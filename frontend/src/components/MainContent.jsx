@@ -1,4 +1,3 @@
-// MainContent.jsx
 import SendOrder from './pages/SendOrder';
 import Orders from './pages/Orders';
 import Ingredients from './pages/Ingredients';
@@ -8,6 +7,7 @@ import OrdersManager from './pages/OrdersManager';
 import Employees from './pages/Employees';
 import MenuManager from './pages/MenuManager';
 import Menu from './pages/Menu';
+import CompleteOrders from './pages/CompleteOrders'; // <-- เพิ่มตรงนี้
 
 const MainContent = ({ active }) => {
   switch (active) {
@@ -16,7 +16,7 @@ const MainContent = ({ active }) => {
     case 'orders':
       return <Orders />; // Placeholder page
     case 'take-order':
-     return <TakeOrder />; 
+      return <TakeOrder />; 
     case 'fix-order':
       return <FixOrder />; 
     case 'orders-manage':
@@ -29,6 +29,8 @@ const MainContent = ({ active }) => {
       return <MenuManager />
     case 'menu':
       return <Menu />
+    case 'complete-orders': // <-- เพิ่ม case นี้
+      return <CompleteOrders />;
 
     default:
       // Fallback to original generic placeholder

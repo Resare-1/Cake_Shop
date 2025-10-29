@@ -3,7 +3,7 @@ import TaskBar from './components/TaskBar';
 import MainContent from './components/MainContent';
 import Login from './components/Login';
 import { loginUser } from './api/authApi';
-
+import CompleteOrders from './components/pages/CompleteOrders';
 export default function App() {
   const [active, setActive] = useState('menu');
 

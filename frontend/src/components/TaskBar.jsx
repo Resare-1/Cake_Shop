@@ -33,38 +33,39 @@ const exportCSV = async () => {
 
 const TaskBar = ({ active, setActive, user, onLogout }) => {
   // Define menu items based on role
-  const getMenuItems = () => {
-    const role = user.role.toLowerCase();
+const getMenuItems = () => {
+  const role = user.role.toLowerCase();
 
-    if (role === 'staff') {
-      return [
-        { key: 'orders', label: 'Orders', icon: ShoppingBag },
-        { key: 'take-order', label: 'Take Order', icon: MenuIcon },
-        { key: 'fix-order', label: 'Fix Order', icon: MenuIcon}
-      ];
-    }
+  if (role === 'staff') {
+    return [
+      { key: 'orders', label: 'Orders', icon: ShoppingBag },
+      { key: 'take-order', label: 'Take Order', icon: MenuIcon },
+      { key: 'fix-order', label: 'Fix Order', icon: MenuIcon },
+      { key: 'complete-orders', label: 'Complete Orders', icon: MenuIcon }, // เพิ่มตรงนี้
+    ];
+  }
 
-    if (role === 'admin') {
-      return [
-        { key: 'orders', label: 'Orders', icon: ShoppingBag },
-        { key: 'send-order', label: 'Send Order to Kitchen', icon: ShoppingBag }
-      ];
-    }
+  if (role === 'admin') {
+    return [
+      { key: 'orders', label: 'Orders', icon: ShoppingBag },
+      { key: 'send-order', label: 'Send Order to Kitchen', icon: ShoppingBag }
+    ];
+  }
 
-    if (role === 'manager') {
-      return [
-        { key: 'menu', label: 'Menu', icon: MenuIcon },
-        { key: 'orders', label: 'Orders', icon: ShoppingBag },
-        { key: 'menu-manage', label: 'Menu Manager', icon: ShoppingBag},
-        { key: 'orders-manage', label: 'Orders Manager', icon: ShoppingBag},
-        { key: 'ingredients', label: 'Stock Manager', icon: Package },
-        { key: 'employees', label: 'Employees Manager', icon: ShoppingBag },
+  if (role === 'manager') {
+    return [
+      { key: 'menu', label: 'Menu', icon: MenuIcon },
+      { key: 'orders', label: 'Orders', icon: ShoppingBag },
+      { key: 'menu-manage', label: 'Menu Manager', icon: ShoppingBag },
+      { key: 'orders-manage', label: 'Orders Manager', icon: ShoppingBag },
+      { key: 'ingredients', label: 'Stock Manager', icon: Package },
+      { key: 'employees', label: 'Employees Manager', icon: ShoppingBag },
+    ];
+  }
 
-      ];
-    }
+  return [];
+};
 
-    return [];
-  };
 
   const items = getMenuItems();
 
