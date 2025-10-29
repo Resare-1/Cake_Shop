@@ -1,44 +1,54 @@
 // src/components/pages/OrdersManager.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-
-const mockOrders = [
-  { id: 1, menu: 'Chocolate Cake', quantity: 1, status: 'CheckOrder', note: 'Extra cream requested' },
-  { id: 2, menu: 'Vanilla Cake', quantity: 2, status: 'CheckOrder', note: 'No nuts' },
-  { id: 3, menu: 'Strawberry Cake', quantity: 1, status: 'CheckOrder', note: 'Add strawberries on top' },
-];
+import { getOrders, fixOrder, confirmOrder } from '../../api/orderApi';
 
 const OrdersManager = () => {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [fixNote, setFixNote] = useState('');
+  const token = localStorage.getItem('token');
 
-  const handleRequestFix = () => {
-    if (!fixNote.trim()) return alert('กรุณากรอก Note ว่าสิ่งที่ต้องการแก้ไข');
-    // Update status to Cancel / Send for fix (mock)
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === selectedOrder.id
-          ? { ...o, status: 'Cancel', note: fixNote }
-          : o
-      )
-    );
-    alert('ส่งคำสั่งแก้ไขเรียบร้อยแล้ว ระบบแจ้งเตือนไปยัง Staff');
-    setSelectedOrder(null);
-    setFixNote('');
+  // ดึง order จาก backend
+  const fetchOrders = async () => {
+    try {
+      const data = await getOrders(token);
+      setOrders(data);
+    } catch (err) {
+      console.error(err);
+      alert('ไม่สามารถโหลด Orders ได้');
+    }
   };
 
-  const handleConfirmOrder = () => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === selectedOrder.id
-          ? { ...o, status: 'Completed' }
-          : o
-      )
-    );
-    alert('Order ยืนยันเรียบร้อยแล้ว ระบบแจ้งเตือนไปยัง Staff');
-    setSelectedOrder(null);
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const handleRequestFix = async () => {
+    if (!fixNote.trim()) return alert('กรุณากรอก Note ว่าสิ่งที่ต้องการแก้ไข');
+    try {
+      await fixOrder(selectedOrder.Order_id, fixNote, token); // backend เปลี่ยน status เป็น 'Cancel'
+      alert('ส่งคำสั่งแก้ไขเรียบร้อยแล้ว ระบบแจ้งเตือนไปยัง Staff');
+      setSelectedOrder(null);
+      setFixNote('');
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการส่งคำสั่งแก้ไข');
+    }
+  };
+
+  const handleConfirmOrder = async () => {
+    try {
+      await confirmOrder(selectedOrder.Order_id, token); // backend เปลี่ยน status เป็น 'Completed'
+      alert('Order ยืนยันเรียบร้อยแล้ว ระบบแจ้งเตือนไปยัง Staff');
+      setSelectedOrder(null);
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการยืนยัน Order');
+    }
   };
 
   return (
@@ -48,19 +58,29 @@ const OrdersManager = () => {
       {/* List of Orders */}
       <div className="overflow-y-auto max-h-96 border rounded-lg p-2 mb-4">
         {orders
-          .filter((o) => o.status === 'CheckOrder')
+          .filter((o) => o.Order_Status === 'CheckOrder') // แสดงเฉพาะ Pending/Processing
           .map((order) => (
             <div
-              key={order.id}
+              key={order.Order_id}
               onClick={() => setSelectedOrder(order)}
               className={`p-3 mb-2 border rounded cursor-pointer ${
-                selectedOrder?.id === order.id ? 'bg-blue-100 border-blue-400' : 'hover:bg-gray-100'
+                selectedOrder?.Order_id === order.Order_id
+                  ? 'bg-blue-100 border-blue-400'
+                  : 'hover:bg-gray-100'
               }`}
             >
-              <p><strong>Order ID:</strong> {order.id}</p>
-              <p><strong>Menu:</strong> {order.menu}</p>
-              <p><strong>Quantity:</strong> {order.quantity}</p>
-              <p><strong>Note:</strong> {order.note}</p>
+              <p><strong>Order ID:</strong> {order.Order_id}</p>
+              <p><strong>Staff ID:</strong> {order.StaffID}</p>
+              <p><strong>Status:</strong> {order.Order_Status}</p>
+              <p><strong>Date:</strong> {new Date(order.Order_date).toLocaleString()}</p>
+              <p><strong>Items:</strong></p>
+              <ul className="ml-4">
+                {order.items.map((item) => (
+                  <li key={item.MenuID}>
+                    {item.MenuName} x {item.Quantity} = {item.Subtotal} ฿
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
       </div>
@@ -68,7 +88,7 @@ const OrdersManager = () => {
       {/* Selected Order Actions */}
       {selectedOrder && (
         <div className="bg-card p-4 border rounded-lg">
-          <h2 className="font-semibold mb-2">จัดการ Order #{selectedOrder.id}</h2>
+          <h2 className="font-semibold mb-2">จัดการ Order #{selectedOrder.Order_id}</h2>
 
           {/* Request Fix */}
           <div className="mb-4">

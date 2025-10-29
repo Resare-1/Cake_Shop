@@ -54,5 +54,45 @@ router.get('/', authenticateJWT, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// PUT /api/orders/:id/fix
+// อัปเดต note และเปลี่ยน status เป็น 'Cancel' หรือ 'SendForFix'
+router.put('/:id/fix', authenticateJWT, async (req, res) => {
+  const orderId = req.params.id;
+  const { note } = req.body;
+
+  if (!note) return res.status(400).json({ error: 'Note is required' });
+
+  try {
+    await pool.query(
+      'UPDATE `Order` SET Order_Status = ?, Note = ? WHERE Order_id = ?',
+      ['Cancel', note, orderId]
+    );
+    res.json({ success: true, Order_id: orderId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update order' });
+  }
+});
+// PUT /api/orders/:id/confirm
+router.put('/:id/confirm', authenticateJWT, async (req, res) => {
+  const orderId = req.params.id;
+
+  try {
+    const [result] = await pool.query(
+      'UPDATE `order` SET `Order_Status` = ? WHERE `Order_id` = ?',
+      ['Complete', orderId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({ success: true, Order_id: orderId, Order_Status: 'Completed' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to confirm order' });
+  }
+});
+
 
 export default router;

@@ -92,3 +92,21 @@ export const updateOrderStatus = async (orderId, newStatus, token) => {
     throw err;
   }
 };
+export const fixOrder = async (orderId, note, token) => {
+  const res = await fetch(`http://localhost:3006/api/orders/${orderId}/fix`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ note }),
+  });
+  if (!res.ok) throw new Error("Failed to fix order");
+  return res.json();
+};
+
+export const confirmOrder = async (orderId, token) => {
+  const res = await fetch(`http://localhost:3006/api/orders/${orderId}/confirm`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Failed to confirm order");
+  return res.json();
+};
