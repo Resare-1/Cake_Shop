@@ -17,7 +17,7 @@ router.post('/login', async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT * FROM staff WHERE Username = ?',
+      'SELECT StaffID, Name, Password, Role FROM staff WHERE Username = ?',
       [username]
     );
 

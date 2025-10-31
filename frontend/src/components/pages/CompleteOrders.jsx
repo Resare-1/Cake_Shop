@@ -23,7 +23,7 @@ const CompleteOrders = () => {
 
   const handleComplete = async (orderId) => {
     try {
-      await updateOrderStatus(orderId, 'Complete', token);
+      await updateOrderStatus(orderId, 'CheckOrder', token);
       alert(`Order #${orderId} ถูกยืนยันเรียบร้อยแล้ว`);
       fetchOrders();
     } catch (err) {

@@ -27,6 +27,7 @@ const TakeOrder = () => {
   const handleStartProduction = async () => {
     if (!selectedOrder) return alert('กรุณาเลือก Order ก่อน');
 
+    // ตรวจสอบว่าใส่ note ครบทุกเมนูหรือยัง
     const hasEmptyNote = selectedOrder.items.some(
       (item) => !item.note || item.note.trim() === ''
     );
@@ -34,14 +35,25 @@ const TakeOrder = () => {
       return alert('กรุณาเพิ่ม Note สำหรับทุกเมนู (ถ้าไม่มีให้ใส่ "ไม่มี")');
 
     try {
-      await fetch(`http://localhost:3006/api/orders/${selectedOrder.Order_id}/start`, {
+      // รวม note ทั้งหมดเป็นข้อความเดียว (คั่นด้วย ", ")
+      const allNotes = selectedOrder.items.map((i) => i.note).join(', ');
+
+      // เรียก API PUT /api/orders/:id เพื่ออัปเดตสถานะ
+      const res = await fetch(`http://localhost:3006/api/orders/${selectedOrder.Order_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          Order_Status: 'Processing',
+          Note: allNotes,
+        }),
       });
-      alert(`Order #${selectedOrder.Order_id} เริ่มทำเค้กเรียบร้อยแล้ว`);
+
+      if (!res.ok) throw new Error('Failed to update order status');
+
+      alert(`Order #${selectedOrder.Order_id} เริ่มทำเค้กเรียบร้อยแล้ว ✅`);
       setSelectedOrder(null);
       fetchOrders();
     } catch (err) {
@@ -80,7 +92,9 @@ const TakeOrder = () => {
       {/* Selected Order Details */}
       {selectedOrder && (
         <div className="bg-card p-4 rounded-lg shadow-sm border border-border">
-          <h2 className="font-semibold mb-2">Order #{selectedOrder.Order_id} Details</h2>
+          <h2 className="font-semibold mb-2">
+            Order #{selectedOrder.Order_id} Details
+          </h2>
           {selectedOrder.items.map((item, idx) => (
             <div key={idx} className="mb-4 p-2 border-b border-border">
               <p>
