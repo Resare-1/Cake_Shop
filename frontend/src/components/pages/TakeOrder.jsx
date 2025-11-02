@@ -28,10 +28,15 @@ const handleStartProduction = async () => {
   if (!selectedOrder) return alert('กรุณาเลือก Order ก่อน');
 
   try {
-    // Only use updated notes if user typed something; otherwise, keep existing
-    const allNotes = selectedOrder.items.map((item) => {
-      if (item.note && item.note.trim() !== '') return item.note;
-      return item.Note || 'ไม่มี'; // fallback to original Note or 'ไม่มี'
+    const existingNotes = selectedOrder.Note
+      ? selectedOrder.Note.split(',').map(n => n.trim())
+      : [];
+
+    const allNotes = selectedOrder.items.map((item, idx) => {
+      // use user input if present, otherwise keep original note
+      return item.note && item.note.trim() !== ''
+        ? item.note
+        : existingNotes[idx] || 'ไม่มี';
     }).join(', ');
 
     const res = await fetch(`http://localhost:3006/api/orders/${selectedOrder.Order_id}`, {
@@ -58,14 +63,16 @@ const handleStartProduction = async () => {
 };
 
 
+
   // Handle selecting order and keep existing item notes
-  const handleSelectOrder = (order) => {
-    const itemsWithNote = order.items.map((item) => ({
-      ...item,
-      note: '', // initialize per-item note for input
-    }));
-    setSelectedOrder({ ...order, items: itemsWithNote });
-  };
+const handleSelectOrder = (order) => {
+  const itemsWithNote = order.items.map((item, idx) => ({
+    ...item,
+    note: item.note || '', // keep existing note if present
+  }));
+  setSelectedOrder({ ...order, items: itemsWithNote });
+};
+
 
   return (
     <div className="ml-64 p-8 min-h-screen bg-background">
@@ -122,11 +129,27 @@ const handleStartProduction = async () => {
           ))}
 
           {/* Display order-level note */}
-          <div className="mb-4 p-2 border-t border-border">
-            <p>
-              <strong>Order Note:</strong> {selectedOrder.Note || 'ไม่มี'}
-            </p>
-          </div>
+<div className="mb-4 p-2 border-t border-border">
+  <strong>Order Note:</strong>
+  {selectedOrder.items && selectedOrder.items.length > 0 ? (
+    <ul className="list-disc list-inside mt-1">
+      {selectedOrder.items.map((item, idx) => {
+        const notesArray = selectedOrder.Note ? selectedOrder.Note.split(',').map(n => n.trim()) : [];
+        const noteForItem = notesArray[idx] || 'ไม่มี';
+        return (
+          <li key={idx}>
+            {item.MenuName}: {noteForItem}
+          </li>
+        );
+      })}
+    </ul>
+  ) : (
+    <p>ไม่มี</p>
+  )}
+</div>
+
+
+
 
           <Button onClick={handleStartProduction} className="mt-4">
             เริ่มทำเค้ก
