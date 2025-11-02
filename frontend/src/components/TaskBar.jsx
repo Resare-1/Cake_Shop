@@ -5,18 +5,17 @@ import { getOrders } from '../api/orderApi';
 import { getAllIngredients } from '../api/ingredientApi';
 import { getStaff } from '../api/staffApi'; // ✅ เพิ่ม import
 
-const exportCSV = async () => {
+const exportXlsx = async () => {
   const token = localStorage.getItem("token");
   if (!token) return alert("You must login first");
 
   try {
-    const res = await fetch("http://localhost:3006/api/report/sales", {
+    const res = await fetch("http://localhost:3006/api/report/full-report", {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!res.ok) {
-      const err = await res.json();
-      alert(err.error || "Failed to export CSV");
+      alert("Failed to export XLSX");
       return;
     }
 
@@ -24,15 +23,19 @@ const exportCSV = async () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "sales_report.csv";
+    a.download = "full_report.xlsx";
     document.body.appendChild(a);
     a.click();
     a.remove();
+    window.URL.revokeObjectURL(url);
   } catch (err) {
     console.error(err);
     alert(err.message);
   }
 };
+
+
+
 
 const TaskBar = ({ active, setActive, user, onLogout }) => {
   const [notifications, setNotifications] = useState({
@@ -202,10 +205,10 @@ const fetchStaffData = async () => {
       {user.role.toLowerCase() === 'manager' && (
         <div className="p-4 border-t border-sidebar-text/20">
           <Button
-            onClick={exportCSV}
+            onClick={exportXlsx}
             className="w-full bg-sidebar-text text-sidebar-bg hover:bg-sidebar-text/90"
           >
-            Export Sales CSV
+            Export Sales Xlsx
           </Button>
         </div>
       )}

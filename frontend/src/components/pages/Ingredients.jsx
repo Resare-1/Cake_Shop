@@ -80,32 +80,38 @@ const fetchIngredients = async () => {
                   <th className="border p-2 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {ingredients.map((item) => (
-                  <tr key={item.IngredientID}>
-                    <td className="border p-2">{item.IngredientName}</td>
-                    <td className="border p-2">{item.Quantity}</td>
-                    <td className="border p-2">{item.Unit}</td>
-                    <td className="border p-2 text-center">
-                      <div className="flex justify-center items-center space-x-2">
-                        <input
-                          type="number"
-                          placeholder="Change"
-                          className="w-20 p-1 border rounded text-center"
-                          value={editQty[item.IngredientID] ?? ""}
-                          onChange={(e) =>
-                            setEditQty((prev) => ({
-                              ...prev,
-                              [item.IngredientID]: e.target.value,
-                            }))
-                          }
-                        />
-                        <Button onClick={() => handleUpdateStock(item.IngredientID)}>Update</Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+<tbody>
+  {ingredients.map((item) => {
+    const qty = parseFloat(item.Quantity);
+    const isLow = isNaN(qty) || qty <= 0;
+
+    return (
+      <tr key={item.IngredientID}>
+        <td className={`border p-2 ${isLow ? "text-red-600 font-bold" : ""}`}>{item.IngredientName}</td>
+        <td className={`border p-2 ${isLow ? "text-red-600 font-bold" : ""}`}>{item.Quantity}</td>
+        <td className="border p-2">{item.Unit}</td>
+        <td className="border p-2 text-center">
+          <div className="flex justify-center items-center space-x-2">
+            <input
+              type="number"
+              placeholder="Change"
+              className="w-20 p-1 border rounded text-center"
+              value={editQty[item.IngredientID] ?? ""}
+              onChange={(e) =>
+                setEditQty((prev) => ({
+                  ...prev,
+                  [item.IngredientID]: e.target.value,
+                }))
+              }
+            />
+            <Button onClick={() => handleUpdateStock(item.IngredientID)}>Update</Button>
+          </div>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
+
             </table>
           </div>
         </CardContent>
