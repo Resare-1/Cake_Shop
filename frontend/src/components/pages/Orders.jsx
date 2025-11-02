@@ -48,13 +48,14 @@ const Orders = ({ user }) => {
                 <th className="p-3 border-b border-border">Quantity</th>
                 {isManager && <th className="p-3 border-b border-border">Subtotal</th>}
                 <th className="p-3 border-b border-border">Status</th>
+                <th className="p-3 border-b border-border">Note</th> {/* added */}
                 {isManager && <th className="p-3 border-b border-border">Action</th>}
               </tr>
             </thead>
             <tbody>
               {orders.length === 0 && (
                 <tr>
-                  <td className="p-3" colSpan={isManager ? 6 : 5}>
+                  <td className="p-3" colSpan={isManager ? 7 : 6}>
                     No orders available.
                   </td>
                 </tr>
@@ -82,6 +83,8 @@ const Orders = ({ user }) => {
                   )}
 
                   <td className="p-3 border-b border-border">{order.Order_Status}</td>
+
+                  <td className="p-3 border-b border-border">{order.Note || 'ไม่มี'}</td> {/* added */}
 
                   {isManager && (
                     <td className="p-3 border-b border-border space-x-2">
