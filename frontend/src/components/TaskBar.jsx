@@ -43,45 +43,60 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
 
   const [staffInfo, setStaffInfo] = useState(null); // ✅ เก็บข้อมูลพนักงาน
 
-  // 🔹 ดึงข้อมูลแจ้งเตือน
-  const fetchNotifications = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+// 🔹 ดึงข้อมูลแจ้งเตือนเฉพาะ staff
+const fetchNotifications = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) return;
 
-    try {
-      const orders = await getOrders(token);
+  try {
+    const orders = await getOrders(token);
 
-      if (user.role.toLowerCase() === "staff") {
-        const pending = orders.filter(o => o.Order_Status === "Pending").length;
-        setNotifications(prev => ({ ...prev, pendingOrders: pending }));
-      }
+    if (user.role.toLowerCase() === "staff") {
+      const takeOrder = orders.filter(o => o.Order_Status === "Pending").length;
+      const fixOrder = orders.filter(o => o.Order_Status === "Cancel").length;
+      const completeOrder = orders.filter(o => o.Order_Status === "Processing").length;
 
-      if (user.role.toLowerCase() === "manager") {
-        const ingredients = await getAllIngredients(token);
-        const lowStock = ingredients.filter(i => i.Quantity <= 0).length;
-        const checkOrders = orders.filter(o => o.Order_Status === "CheckOrder").length;
-
-        setNotifications(prev => ({
-          ...prev,
-          lowStock,
-          checkOrder: checkOrders
-        }));
-      }
-    } catch (err) {
-      console.error(err);
+      setNotifications(prev => ({
+        ...prev,
+        pendingOrders: 0,   // Orders menu ไม่มี badge
+        takeOrder,
+        fixOrder,
+        completeOrder
+      }));
     }
-  };
+
+    // สำหรับ manager / admin สามารถคง logic เดิม
+    if (user.role.toLowerCase() === "manager") {
+      const ingredients = await getAllIngredients(token);
+      const lowStock = ingredients.filter(i => i.Quantity <= 0).length;
+      const checkOrders = orders.filter(o => o.Order_Status === "CheckOrder").length;
+
+      setNotifications(prev => ({
+        ...prev,
+        lowStock,
+        checkOrder: checkOrders
+      }));
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   // 🔹 ดึงข้อมูล staff ของ user ที่ login
-  const fetchStaffData = async () => {
-    try {
-      const allStaff = await getStaff();
-      const found = allStaff.find(s => s.Staff_Username === user.username);
-      setStaffInfo(found || null);
-    } catch (err) {
-      console.error("Failed to load staff info:", err);
-    }
-  };
+const fetchStaffData = async () => {
+  try {
+    if (!user.StaffID) return;
+
+    const allStaff = await getStaff();
+    const found = allStaff.find(s => s.StaffID === user.StaffID);
+    setStaffInfo(found || null);
+  } catch (err) {
+    console.error("Failed to load staff info:", err);
+  }
+};
+
 
   useEffect(() => {
     fetchStaffData();
@@ -96,12 +111,13 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
 
     if (role === 'staff') {
       return [
-        { key: 'orders', label: 'Orders', icon: ShoppingBag, badge: notifications.pendingOrders },
-        { key: 'take-order', label: 'Take Order', icon: MenuIcon },
-        { key: 'fix-order', label: 'Fix Order', icon: MenuIcon },
-        { key: 'complete-orders', label: 'Complete Orders', icon: MenuIcon },
+        { key: 'orders', label: 'Orders', icon: ShoppingBag }, // ไม่มี badge
+        { key: 'take-order', label: 'Take Order', icon: MenuIcon, badge: notifications.takeOrder },
+        { key: 'fix-order', label: 'Fix Order', icon: MenuIcon, badge: notifications.fixOrder },
+        { key: 'complete-orders', label: 'Complete Orders', icon: MenuIcon, badge: notifications.completeOrder },
       ];
     }
+
 
     if (role === 'admin') {
       return [

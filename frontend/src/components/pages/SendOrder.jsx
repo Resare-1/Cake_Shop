@@ -16,7 +16,8 @@ const SendOrder = () => {
     const fetchMenus = async () => {
       try {
         const data = await getMenus();
-        setMenus(data);
+        // แสดงเฉพาะเมนูเปิดใช้งาน
+        setMenus(data.filter(menu => menu.Is_Available));
       } catch (err) {
         console.error(err);
         alert('ไม่สามารถโหลดเมนูได้');
@@ -45,6 +46,7 @@ const SendOrder = () => {
         name: menu.MenuName,
         Quantity: quantity,
         Note: note,
+        Ingredients: menu.Ingredients || [], // เก็บ ingredients
       });
     }
 
@@ -61,25 +63,27 @@ const SendOrder = () => {
     if (dayjs(deadline).isBefore(minDeadline))
       return alert('Deadline ต้องเป็นวันถัดไปหรือมากกว่า');
 
-      try {
-        // เรียก submitOrders แบบถูกต้อง
-        await submitOrders({
-          orders: orders.map((o) => ({
-            MenuID: o.MenuID,
-            Quantity: o.Quantity,
-            Note: o.Note,
-          })),
-          Deadline: deadline, // ส่ง deadline ด้วย
-        });
+    try {
+      const result = await submitOrders({
+        orders: orders.map((o) => ({
+          MenuID: o.MenuID,
+          Quantity: o.Quantity,
+          Note: o.Note,
+        })),
+        Deadline: deadline,
+      });
 
-        alert('ส่งคำสั่งซื้อทั้งหมดเรียบร้อย!');
-        setOrders([]);
-        setDeadline('');
-      } catch (err) {
-        console.error(err);
-        alert('เกิดข้อผิดพลาดในการส่งคำสั่งซื้อ');
+      if (result.warnings && result.warnings.length > 0) {
+        alert("คำเตือนเกี่ยวกับวัตถุดิบ:\n" + result.warnings.join("\n"));
       }
 
+      alert('ส่งคำสั่งซื้อทั้งหมดเรียบร้อย!');
+      setOrders([]);
+      setDeadline('');
+    } catch (err) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการส่งคำสั่งซื้อ');
+    }
   };
 
   if (loading) return <p>Loading menus...</p>;
@@ -129,16 +133,28 @@ const SendOrder = () => {
         ) : (
           <div className="bg-card p-4 border rounded-lg space-y-2">
             {orders.map((o) => (
-              <div key={o.MenuID} className="flex justify-between items-center border-b pb-1">
-                <span>
-                  {o.name} x {o.Quantity} - ({o.Note})
-                </span>
-                <button
-                  onClick={() => setOrders(orders.filter(order => order.MenuID !== o.MenuID))}
-                  className="text-red-500 font-bold px-2 rounded hover:bg-red-100"
-                >
-                  ×
-                </button>
+              <div key={o.MenuID} className="border-b pb-2">
+                <div className="flex justify-between items-center">
+                  <span>
+                    {o.name} x {o.Quantity} - ({o.Note})
+                  </span>
+                  <button
+                    onClick={() => setOrders(orders.filter(order => order.MenuID !== o.MenuID))}
+                    className="text-red-500 font-bold px-2 rounded hover:bg-red-100"
+                  >
+                    ×
+                  </button>
+                </div>
+                {/* แสดง Ingredients */}
+                {o.Ingredients && o.Ingredients.length > 0 && (
+                  <ul className="text-sm text-muted-foreground ml-4 mt-1">
+                    {o.Ingredients.map(ing => (
+                      <li key={ing.IngredientID}>
+                        {ing.IngredientName} ({ing.qty_required} {ing.Unit})
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             ))}
 

@@ -109,7 +109,6 @@ router.post('/', authenticateJWT, async (req, res) => {
   if (!Deadline) 
     return res.status(400).json({ error: 'Deadline is required' });
 
-  // ตรวจสอบว่า Deadline >= วันนี้ + 1 วัน
   const deadlineDate = new Date(Deadline);
   const minDate = new Date();
   minDate.setDate(minDate.getDate() + 1);
@@ -117,29 +116,66 @@ router.post('/', authenticateJWT, async (req, res) => {
     return res.status(400).json({ error: 'Deadline ต้องไม่น้อยกว่า 1 วันจากวันนี้' });
   }
 
+  const connection = await pool.getConnection();
   try {
-    // 1. สร้าง Order Master
-    const [orderResult] = await pool.query(
+    await connection.beginTransaction();
+
+    // 1️⃣ สร้าง Order Master
+    const [orderResult] = await connection.query(
       'INSERT INTO `Order` (StaffID, Order_Status, Order_date, Order_deadline) VALUES (?, ?, NOW(), ?)',
       [StaffID, 'Pending', Deadline]
     );
     const orderId = orderResult.insertId;
 
+    // 2️⃣ เตรียม Order Items
+    const itemValues = orders.map(o => [orderId, o.MenuID, o.Quantity]);
+    await connection.query(
+      'INSERT INTO Order_Item (Order_id, MenuID, Quantity) VALUES ?',
+      [itemValues]
+    );
 
-      // 2. สร้าง Order Items
-      const itemValues = orders.map(o => [
-        orderId, o.MenuID, o.Quantity
-      ]);
-      await pool.query(
-        'INSERT INTO Order_Item (Order_id, MenuID, Quantity) VALUES ?',
-        [itemValues]
+    // 3️⃣ ลด Stock ของ ingredient
+    let warnings = []; // เก็บ ingredient ที่ stock ไม่พอ
+    for (const o of orders) {
+      // ดึง ingredient ของเมนู
+      const [ingredients] = await connection.query(
+        `SELECT i.IngredientID, i.IngredientName, i.Stock_qty, mi.qty_required
+         FROM menu_ingredient mi
+         JOIN ingredient i ON mi.IngredientID = i.IngredientID
+         WHERE mi.MenuID = ?`,
+        [o.MenuID]
       );
 
+      for (const ing of ingredients) {
+        const totalNeeded = ing.qty_required * o.Quantity;
 
-    res.json({ success: true, orderId, message: 'Order created successfully' });
+        if (ing.Stock_qty < totalNeeded) {
+          warnings.push(`${ing.IngredientName} มีไม่พอ (${ing.Stock_qty} < ${totalNeeded})`);
+        }
+
+        // ลด stock แม้ไม่พอ
+        await connection.query(
+          'UPDATE ingredient SET Stock_qty = Stock_qty - ? WHERE IngredientID = ?',
+          [totalNeeded, ing.IngredientID]
+        );
+      }
+    }
+
+    await connection.commit();
+
+    res.json({
+      success: true,
+      orderId,
+      message: 'Order created successfully',
+      warnings, // ส่ง warnings กลับไป
+    });
+
   } catch (err) {
+    await connection.rollback();
     console.error(err);
     res.status(500).json({ error: 'Failed to create order' });
+  } finally {
+    connection.release();
   }
 });
 

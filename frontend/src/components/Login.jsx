@@ -2,17 +2,32 @@ import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 
-
 const Login = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); // สำหรับแสดง error message
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username && password) {
-      onLogin({ username, password });
-    } else {
-      alert('Username and password are required');
+    setError(''); // เคลียร์ error ก่อนส่ง
+    if (!username || !password) {
+      setError('Username and password are required');
+      return;
+    }
+
+    try {
+      await onLogin({ username, password });
+    } catch (err) {
+      // แยกข้อความตาม status code หรือข้อความที่ backend ส่งมา
+      if (err.message.includes('deactivated')) {
+        setError('บัญชีถูกปิดการใช้งาน กรุณาติดต่อผู้จัดการ');
+      } else if (err.message.includes('User not found')) {
+        setError('ไม่พบผู้ใช้งาน');
+      } else if (err.message.includes('Invalid password')) {
+        setError('รหัสผ่านไม่ถูกต้อง');
+      } else {
+        setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
+      }
     }
   };
 
@@ -22,7 +37,13 @@ const Login = ({ onLogin }) => {
         <h1 className="text-3xl font-bold text-foreground mb-6 text-center">
           Welcome Back
         </h1>
-        
+
+        {error && (
+          <div className="mb-4 text-sm text-red-600 text-center">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">
@@ -36,7 +57,7 @@ const Login = ({ onLogin }) => {
               required
             />
           </div>
-          
+
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">
               Password

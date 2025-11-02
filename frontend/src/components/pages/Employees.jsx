@@ -199,7 +199,7 @@ const submitEditStaff = async (e) => {
               </li>
             ))}
           </ul>
-        </CardContent>
+        </CardContent>  
       </Card>
 
       {/* Edit Employee Form */}

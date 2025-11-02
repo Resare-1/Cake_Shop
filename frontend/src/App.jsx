@@ -3,7 +3,7 @@ import TaskBar from './components/TaskBar';
 import MainContent from './components/MainContent';
 import Login from './components/Login';
 import { loginUser } from './api/authApi';
-import CompleteOrders from './components/pages/CompleteOrders';
+
 export default function App() {
   const [active, setActive] = useState('menu');
 
@@ -38,9 +38,14 @@ export default function App() {
 
   return (
     <div className="flex h-screen">
-      <TaskBar active={active} setActive={setActive} user={user} onLogout={handleLogout} />
+      <TaskBar
+        active={active}
+        setActive={setActive}
+        user={user}
+        onLogout={handleLogout}
+      />
       <main className="flex-1 bg-background p-6 overflow-y-auto">
-        <MainContent key={user?.Name} active={active} />
+        <MainContent key={user?.Name} active={active} user={user} />
       </main>
     </div>
   );
