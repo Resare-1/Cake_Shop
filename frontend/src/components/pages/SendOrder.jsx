@@ -10,7 +10,7 @@ const SendOrder = () => {
   const [orders, setOrders] = useState([]);
   const [quantities, setQuantities] = useState({});
   const [deadline, setDeadline] = useState('');
-  const [orderNote, setOrderNote] = useState(''); // ✅ note เดียวทั้งออเดอร์
+  const [itemNotes, setItemNotes] = useState({}); // ✅ notes per menu item
 
   useEffect(() => {
     const fetchMenus = async () => {
@@ -47,6 +47,7 @@ const SendOrder = () => {
 
     setOrders(newOrders);
     setQuantities({ ...quantities, [menu.MenuID]: 1 });
+    setItemNotes({ ...itemNotes, [menu.MenuID]: itemNotes[menu.MenuID] || '' }); // ensure note field exists
   };
 
   const handleSubmitOrders = async () => {
@@ -57,6 +58,11 @@ const SendOrder = () => {
     if (dayjs(deadline).isBefore(minDeadline))
       return alert('Deadline ต้องเป็นวันถัดไปหรือมากกว่า');
 
+    // ✅ Combine all per-item notes into one note string
+    const combinedNotes = orders
+      .map(o => `${o.name}: ${itemNotes[o.MenuID] || 'ไม่มี'}`)
+      .join(', ');
+
     try {
       const result = await submitOrders({
         orders: orders.map((o) => ({
@@ -64,7 +70,7 @@ const SendOrder = () => {
           Quantity: o.Quantity,
         })),
         Deadline: deadline,
-        Note: orderNote, // ✅ เพิ่ม note เดียวสำหรับทั้งออเดอร์
+        Note: combinedNotes, // ✅ Send combined notes
       });
 
       if (result.warnings && result.warnings.length > 0) {
@@ -74,7 +80,7 @@ const SendOrder = () => {
       alert('ส่งคำสั่งซื้อทั้งหมดเรียบร้อย!');
       setOrders([]);
       setDeadline('');
-      setOrderNote('');
+      setItemNotes({});
     } catch (err) {
       console.error(err);
       alert('เกิดข้อผิดพลาดในการส่งคำสั่งซื้อ');
@@ -126,12 +132,29 @@ const SendOrder = () => {
                     {o.name} x {o.Quantity}
                   </span>
                   <button
-                    onClick={() => setOrders(orders.filter(order => order.MenuID !== o.MenuID))}
+                    onClick={() => {
+                      setOrders(orders.filter(order => order.MenuID !== o.MenuID));
+                      const newNotes = { ...itemNotes };
+                      delete newNotes[o.MenuID];
+                      setItemNotes(newNotes);
+                    }}
                     className="text-red-500 font-bold px-2 rounded hover:bg-red-100"
                   >
                     ×
                   </button>
                 </div>
+
+                {/* ✅ Individual Note Field */}
+                <textarea
+                  value={itemNotes[o.MenuID] || ''}
+                  onChange={(e) =>
+                    setItemNotes({ ...itemNotes, [o.MenuID]: e.target.value })
+                  }
+                  placeholder={`หมายเหตุสำหรับ ${o.name} (ถ้ามี)`}
+                  rows={1}
+                  className="w-full border border-border rounded-md p-1 mt-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+
                 {o.Ingredients && o.Ingredients.length > 0 && (
                   <ul className="text-sm text-muted-foreground ml-4 mt-1">
                     {o.Ingredients.map(ing => (
@@ -143,18 +166,6 @@ const SendOrder = () => {
                 )}
               </div>
             ))}
-
-            {/* ✅ Order Note (รวมทุกเมนู) */}
-            <div className="mt-4">
-              <label className="font-semibold block mb-1">หมายเหตุเพิ่มเติม (ถ้ามี):</label>
-              <textarea
-                value={orderNote}
-                onChange={(e) => setOrderNote(e.target.value)}
-                placeholder="เช่น ไม่ใส่นม / เพิ่มวิปครีม / รับช่วงบ่าย"
-                rows={2}
-                className="w-full border border-border rounded-md p-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
 
             {/* Deadline + Submit */}
             <div className="flex items-center gap-4 mt-4">

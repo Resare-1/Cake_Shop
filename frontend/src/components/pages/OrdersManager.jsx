@@ -6,7 +6,7 @@ import { getOrders, updateOrderStatus } from '../../api/orderApi';
 const OrdersManager = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [fixNote, setFixNote] = useState('');
+  const [fixNotes, setFixNotes] = useState([]); // changed from single fixNote to array
   const token = localStorage.getItem('token');
 
   // ดึง order จาก backend
@@ -26,12 +26,20 @@ const OrdersManager = () => {
 
   // Request fix (เปลี่ยน status เป็น Cancel + note)
   const handleRequestFix = async () => {
-    if (!fixNote.trim()) return alert('กรุณากรอก Note ว่าสิ่งที่ต้องการแก้ไข');
+    // ตรวจสอบว่าอย่างน้อยมี note บางอันถูกกรอก
+    const hasNote = fixNotes.some((n) => n.trim() !== '');
+    if (!hasNote) return alert('กรุณากรอก Note สำหรับอย่างน้อยหนึ่งเมนู');
+
     try {
-      await updateOrderStatus(selectedOrder.Order_id, 'Cancel', token, fixNote);
+      // รวม note แต่ละเมนูเป็น string เดียว
+      const allFixNotes = fixNotes
+        .map((note, idx) => `${selectedOrder.items[idx].MenuName}: ${note || 'ไม่มี'}`)
+        .join(', ');
+
+      await updateOrderStatus(selectedOrder.Order_id, 'Cancel', token, allFixNotes);
       alert('ส่งคำสั่งแก้ไขเรียบร้อยแล้ว ระบบแจ้งเตือนไปยัง Staff');
       setSelectedOrder(null);
-      setFixNote('');
+      setFixNotes([]);
       fetchOrders();
     } catch (err) {
       console.error(err);
@@ -59,11 +67,14 @@ const OrdersManager = () => {
       {/* List of Orders */}
       <div className="overflow-y-auto max-h-96 border rounded-lg p-2 mb-4">
         {orders
-          .filter((o) => o.Order_Status === 'CheckOrder') // แสดงเฉพาะ Pending/Processing
+          .filter((o) => o.Order_Status === 'CheckOrder')
           .map((order) => (
             <div
               key={order.Order_id}
-              onClick={() => setSelectedOrder(order)}
+              onClick={() => {
+                setSelectedOrder(order);
+                setFixNotes(order.items.map(() => '')); // initialize fixNotes per item
+              }}
               className={`p-3 mb-2 border rounded cursor-pointer ${
                 selectedOrder?.Order_id === order.Order_id
                   ? 'bg-blue-100 border-blue-400'
@@ -93,12 +104,22 @@ const OrdersManager = () => {
 
           {/* Request Fix */}
           <div className="mb-4">
-            <Input
-              value={fixNote}
-              onChange={(e) => setFixNote(e.target.value)}
-              placeholder="ระบุสิ่งที่ต้องการให้ Staff แก้ไข"
-              className="mb-2 w-full"
-            />
+            <h3 className="font-medium mb-2">ระบุสิ่งที่ต้องการให้ Staff แก้ไข (ต่อเค้ก)</h3>
+            {selectedOrder.items.map((item, idx) => (
+              <div key={item.MenuID} className="mb-2">
+                <p><strong>{item.MenuName}</strong></p>
+                <Input
+                  value={fixNotes[idx] || ''}
+                  onChange={(e) => {
+                    const newNotes = [...fixNotes];
+                    newNotes[idx] = e.target.value;
+                    setFixNotes(newNotes);
+                  }}
+                  placeholder={`Note สำหรับ ${item.MenuName}`}
+                  className="mt-1"
+                />
+              </div>
+            ))}
             <Button onClick={handleRequestFix} className="mr-2">
               Request Fix
             </Button>
@@ -106,7 +127,10 @@ const OrdersManager = () => {
 
           {/* Confirm Order */}
           <div>
-            <Button onClick={handleConfirmOrder} className="bg-green-500 hover:bg-green-600 text-white">
+            <Button
+              onClick={handleConfirmOrder}
+              className="bg-green-500 hover:bg-green-600 text-white"
+            >
               Confirm Order
             </Button>
           </div>
