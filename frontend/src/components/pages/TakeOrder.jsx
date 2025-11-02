@@ -62,6 +62,15 @@ const TakeOrder = () => {
     }
   };
 
+  // Handle selecting order and keep existing item notes
+  const handleSelectOrder = (order) => {
+    const itemsWithNote = order.items.map((item) => ({
+      ...item,
+      note: '', // initialize per-item note for input
+    }));
+    setSelectedOrder({ ...order, items: itemsWithNote });
+  };
+
   return (
     <div className="ml-64 p-8 min-h-screen bg-background">
       <h1 className="text-3xl font-bold text-foreground mb-4">Take Order</h1>
@@ -74,7 +83,7 @@ const TakeOrder = () => {
           .map((order) => (
             <button
               key={order.Order_id}
-              onClick={() => setSelectedOrder(order)}
+              onClick={() => handleSelectOrder(order)}
               className={`w-full text-left p-3 rounded-md mb-1 border ${
                 selectedOrder?.Order_id === order.Order_id
                   ? 'border-blue-400 bg-blue-50'
@@ -95,6 +104,8 @@ const TakeOrder = () => {
           <h2 className="font-semibold mb-2">
             Order #{selectedOrder.Order_id} Details
           </h2>
+
+          {/* Display items */}
           {selectedOrder.items.map((item, idx) => (
             <div key={idx} className="mb-4 p-2 border-b border-border">
               <p>
@@ -113,6 +124,14 @@ const TakeOrder = () => {
               />
             </div>
           ))}
+
+          {/* Display order-level note */}
+          <div className="mb-4 p-2 border-t border-border">
+            <p>
+              <strong>Order Note:</strong> {selectedOrder.Note || 'ไม่มี'}
+            </p>
+          </div>
+
           <Button onClick={handleStartProduction} className="mt-4">
             เริ่มทำเค้ก
           </Button>
