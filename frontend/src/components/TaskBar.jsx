@@ -1,14 +1,16 @@
+import React, { useState, useEffect } from 'react';
 import { LogOut, Menu as MenuIcon, ShoppingBag, Package } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { getOrders } from '../api/orderApi';
+import { getAllIngredients } from '../api/ingredientApi';
+
 const exportCSV = async () => {
   const token = localStorage.getItem("token");
   if (!token) return alert("You must login first");
 
   try {
     const res = await fetch("http://localhost:3006/api/report/sales", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!res.ok) {
@@ -32,40 +34,78 @@ const exportCSV = async () => {
 };
 
 const TaskBar = ({ active, setActive, user, onLogout }) => {
-  // Define menu items based on role
-const getMenuItems = () => {
-  const role = user.role.toLowerCase();
+  const [notifications, setNotifications] = useState({
+    pendingOrders: 0,
+    lowStock: 0,
+    checkOrder: 0,
+  });
 
-  if (role === 'staff') {
-    return [
-      { key: 'orders', label: 'Orders', icon: ShoppingBag },
-      { key: 'take-order', label: 'Take Order', icon: MenuIcon },
-      { key: 'fix-order', label: 'Fix Order', icon: MenuIcon },
-      { key: 'complete-orders', label: 'Complete Orders', icon: MenuIcon }, // เพิ่มตรงนี้
-    ];
-  }
+  const fetchNotifications = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-  if (role === 'admin') {
-    return [
-      { key: 'orders', label: 'Orders', icon: ShoppingBag },
-      { key: 'send-order', label: 'Send Order to Kitchen', icon: ShoppingBag }
-    ];
-  }
+    try {
+      const orders = await getOrders(token);
 
-  if (role === 'manager') {
-    return [
-      { key: 'menu', label: 'Menu', icon: MenuIcon },
-      { key: 'orders', label: 'Orders', icon: ShoppingBag },
-      { key: 'menu-manage', label: 'Menu Manager', icon: ShoppingBag },
-      { key: 'orders-manage', label: 'Orders Manager', icon: ShoppingBag },
-      { key: 'ingredients', label: 'Stock Manager', icon: Package },
-      { key: 'employees', label: 'Employees Manager', icon: ShoppingBag },
-    ];
-  }
+      if (user.role.toLowerCase() === "staff") {
+        const pending = orders.filter(o => o.Order_Status === "Pending").length;
+        setNotifications(prev => ({ ...prev, pendingOrders: pending }));
+      }
 
-  return [];
-};
+      if (user.role.toLowerCase() === "manager") {
+        const ingredients = await getAllIngredients(token);
+        const lowStock = ingredients.filter(i => i.Quantity <= 0).length;
+        const checkOrders = orders.filter(o => o.Order_Status === "CheckOrder").length;
 
+        setNotifications(prev => ({
+          ...prev,
+          lowStock,
+          checkOrder: checkOrders
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 500); // refresh ทุก 30 วินาที
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const getMenuItems = () => {
+    const role = user.role.toLowerCase();
+
+    if (role === 'staff') {
+      return [
+        { key: 'orders', label: 'Orders', icon: ShoppingBag, badge: notifications.pendingOrders },
+        { key: 'take-order', label: 'Take Order', icon: MenuIcon },
+        { key: 'fix-order', label: 'Fix Order', icon: MenuIcon },
+        { key: 'complete-orders', label: 'Complete Orders', icon: MenuIcon },
+      ];
+    }
+
+    if (role === 'admin') {
+      return [
+        { key: 'orders', label: 'Orders', icon: ShoppingBag },
+        { key: 'send-order', label: 'Send Order to Kitchen', icon: ShoppingBag }
+      ];
+    }
+
+    if (role === 'manager') {
+      return [
+        { key: 'menu', label: 'Menu', icon: MenuIcon },
+        { key: 'orders', label: 'Orders', icon: ShoppingBag },
+        { key: 'menu-manage', label: 'Menu Manager', icon: ShoppingBag },
+        { key: 'orders-manage', label: 'Orders Manager', icon: ShoppingBag, badge: notifications.checkOrder },
+        { key: 'ingredients', label: 'Stock Manager', icon: Package, badge: notifications.lowStock },
+        { key: 'employees', label: 'Employees Manager', icon: ShoppingBag },
+      ];
+    }
+
+    return [];
+  };
 
   const items = getMenuItems();
 
@@ -104,6 +144,11 @@ const getMenuItems = () => {
             >
               <Icon className="h-5 w-5" />
               <span className="font-medium">{item.label}</span>
+              {item.badge > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  {item.badge}
+                </span>
+              )}
             </button>
           );
         })}
@@ -112,12 +157,12 @@ const getMenuItems = () => {
       {/* Manager Export Button */}
       {user.role.toLowerCase() === 'manager' && (
         <div className="p-4 border-t border-sidebar-text/20">
-        <Button
-          onClick={exportCSV}
-          className="w-full bg-sidebar-text text-sidebar-bg hover:bg-sidebar-text/90"
-        >
-          Export Sales CSV
-        </Button>
+          <Button
+            onClick={exportCSV}
+            className="w-full bg-sidebar-text text-sidebar-bg hover:bg-sidebar-text/90"
+          >
+            Export Sales CSV
+          </Button>
         </div>
       )}
     </aside>
