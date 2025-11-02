@@ -21,10 +21,11 @@ const CompleteOrders = () => {
     fetchOrders();
   }, []);
 
-  const handleComplete = async (orderId) => {
+  const handleComplete = async (order) => {
     try {
-      await updateOrderStatus(orderId, 'CheckOrder', token);
-      alert(`Order #${orderId} ถูกยืนยันเรียบร้อยแล้ว`);
+      // Send the note exactly as-is
+      await updateOrderStatus(order.Order_id, 'CheckOrder', token, order.Note);
+      alert(`Order #${order.Order_id} ถูกยืนยันเรียบร้อยแล้ว`);
       fetchOrders();
     } catch (err) {
       console.error(err);
@@ -48,11 +49,14 @@ const CompleteOrders = () => {
               {order.items.map((item) => (
                 <li key={item.MenuID}>
                   {item.MenuName} x {item.Quantity} = {item.Subtotal} ฿
+                  {item.Note && item.Note.trim() !== '' && (
+                    <p className="ml-2 text-gray-600">Note: {item.Note}</p>
+                  )}
                 </li>
               ))}
             </ul>
             <Button
-              onClick={() => handleComplete(order.Order_id)}
+              onClick={() => handleComplete(order)}
               className="mt-2 bg-green-500 hover:bg-green-600 text-white"
             >
               Complete Order

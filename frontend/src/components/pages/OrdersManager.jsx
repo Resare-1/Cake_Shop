@@ -6,10 +6,9 @@ import { getOrders, updateOrderStatus } from '../../api/orderApi';
 const OrdersManager = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [fixNotes, setFixNotes] = useState([]); // changed from single fixNote to array
+  const [fixNotes, setFixNotes] = useState([]);
   const token = localStorage.getItem('token');
 
-  // ดึง order จาก backend
   const fetchOrders = async () => {
     try {
       const data = await getOrders(token);
@@ -24,17 +23,13 @@ const OrdersManager = () => {
     fetchOrders();
   }, []);
 
-  // Request fix (เปลี่ยน status เป็น Cancel + note)
   const handleRequestFix = async () => {
-    // ตรวจสอบว่าอย่างน้อยมี note บางอันถูกกรอก
     const hasNote = fixNotes.some((n) => n.trim() !== '');
     if (!hasNote) return alert('กรุณากรอก Note สำหรับอย่างน้อยหนึ่งเมนู');
 
     try {
-      // รวม note แต่ละเมนูเป็น string เดียว
-      const allFixNotes = fixNotes
-        .map((note, idx) => `${selectedOrder.items[idx].MenuName}: ${note || 'ไม่มี'}`)
-        .join(', ');
+      // Join notes into a single comma-separated string for backend
+      const allFixNotes = fixNotes.map((note) => note || 'ไม่มี').join(', ');
 
       await updateOrderStatus(selectedOrder.Order_id, 'Cancel', token, allFixNotes);
       alert('ส่งคำสั่งแก้ไขเรียบร้อยแล้ว ระบบแจ้งเตือนไปยัง Staff');
@@ -47,7 +42,6 @@ const OrdersManager = () => {
     }
   };
 
-  // Confirm order (เปลี่ยน status เป็น Complete)
   const handleConfirmOrder = async () => {
     try {
       await updateOrderStatus(selectedOrder.Order_id, 'Complete', token);
@@ -73,7 +67,14 @@ const OrdersManager = () => {
               key={order.Order_id}
               onClick={() => {
                 setSelectedOrder(order);
-                setFixNotes(order.items.map(() => '')); // initialize fixNotes per item
+
+                // Split the note string by commas and assign per item
+                const splitNotes = (order.Note || '')
+                  .split(',')
+                  .map((n) => n.trim());
+
+                const initialNotes = order.items.map((_, idx) => splitNotes[idx] || '');
+                setFixNotes(initialNotes);
               }}
               className={`p-3 mb-2 border rounded cursor-pointer ${
                 selectedOrder?.Order_id === order.Order_id
@@ -115,7 +116,7 @@ const OrdersManager = () => {
                     newNotes[idx] = e.target.value;
                     setFixNotes(newNotes);
                   }}
-                  placeholder={`Note สำหรับ ${item.MenuName}`}
+                  placeholder="Note (ถ้าไม่มีใส่ 'ไม่มี')" // removed menu name
                   className="mt-1"
                 />
               </div>

@@ -10,7 +10,7 @@ const SendOrder = () => {
   const [orders, setOrders] = useState([]);
   const [quantities, setQuantities] = useState({});
   const [deadline, setDeadline] = useState('');
-  const [itemNotes, setItemNotes] = useState({}); // ✅ notes per menu item
+  const [itemNotes, setItemNotes] = useState({}); // notes per menu item
 
   useEffect(() => {
     const fetchMenus = async () => {
@@ -47,7 +47,7 @@ const SendOrder = () => {
 
     setOrders(newOrders);
     setQuantities({ ...quantities, [menu.MenuID]: 1 });
-    setItemNotes({ ...itemNotes, [menu.MenuID]: itemNotes[menu.MenuID] || '' }); // ensure note field exists
+    setItemNotes({ ...itemNotes, [menu.MenuID]: itemNotes[menu.MenuID] || '' });
   };
 
   const handleSubmitOrders = async () => {
@@ -58,10 +58,10 @@ const SendOrder = () => {
     if (dayjs(deadline).isBefore(minDeadline))
       return alert('Deadline ต้องเป็นวันถัดไปหรือมากกว่า');
 
-    // ✅ Combine all per-item notes into one note string
+    // Only send the note text, not the menu name
     const combinedNotes = orders
-      .map(o => `${o.name}: ${itemNotes[o.MenuID] || 'ไม่มี'}`)
-      .join(', ');
+      .map(o => itemNotes[o.MenuID] || 'ไม่มี')
+      .join(',');
 
     try {
       const result = await submitOrders({
@@ -70,7 +70,7 @@ const SendOrder = () => {
           Quantity: o.Quantity,
         })),
         Deadline: deadline,
-        Note: combinedNotes, // ✅ Send combined notes
+        Note: combinedNotes, // ✅ note text only
       });
 
       if (result.warnings && result.warnings.length > 0) {
@@ -144,7 +144,7 @@ const SendOrder = () => {
                   </button>
                 </div>
 
-                {/* ✅ Individual Note Field */}
+                {/* Individual Note Field */}
                 <textarea
                   value={itemNotes[o.MenuID] || ''}
                   onChange={(e) =>

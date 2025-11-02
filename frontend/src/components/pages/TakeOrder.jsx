@@ -24,43 +24,39 @@ const TakeOrder = () => {
     fetchOrders();
   }, []);
 
-  const handleStartProduction = async () => {
-    if (!selectedOrder) return alert('กรุณาเลือก Order ก่อน');
+const handleStartProduction = async () => {
+  if (!selectedOrder) return alert('กรุณาเลือก Order ก่อน');
 
-    // ตรวจสอบว่าใส่ note ครบทุกเมนูหรือยัง
-    const hasEmptyNote = selectedOrder.items.some(
-      (item) => !item.note || item.note.trim() === ''
-    );
-    if (hasEmptyNote)
-      return alert('กรุณาเพิ่ม Note สำหรับทุกเมนู (ถ้าไม่มีให้ใส่ "ไม่มี")');
+  try {
+    // Only use updated notes if user typed something; otherwise, keep existing
+    const allNotes = selectedOrder.items.map((item) => {
+      if (item.note && item.note.trim() !== '') return item.note;
+      return item.Note || 'ไม่มี'; // fallback to original Note or 'ไม่มี'
+    }).join(', ');
 
-    try {
-      // รวม note ทั้งหมดเป็นข้อความเดียว (คั่นด้วย ", ")
-      const allNotes = selectedOrder.items.map((i) => i.note).join(', ');
+    const res = await fetch(`http://localhost:3006/api/orders/${selectedOrder.Order_id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        Order_Status: 'Processing',
+        Note: allNotes,
+      }),
+    });
 
-      // เรียก API PUT /api/orders/:id เพื่ออัปเดตสถานะ
-      const res = await fetch(`http://localhost:3006/api/orders/${selectedOrder.Order_id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          Order_Status: 'Processing',
-          Note: allNotes,
-        }),
-      });
+    if (!res.ok) throw new Error('Failed to update order status');
 
-      if (!res.ok) throw new Error('Failed to update order status');
+    alert(`Order #${selectedOrder.Order_id} เริ่มทำเค้กเรียบร้อยแล้ว ✅`);
+    setSelectedOrder(null);
+    fetchOrders();
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+};
 
-      alert(`Order #${selectedOrder.Order_id} เริ่มทำเค้กเรียบร้อยแล้ว ✅`);
-      setSelectedOrder(null);
-      fetchOrders();
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
-    }
-  };
 
   // Handle selecting order and keep existing item notes
   const handleSelectOrder = (order) => {

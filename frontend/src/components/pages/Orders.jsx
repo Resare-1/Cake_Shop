@@ -84,7 +84,16 @@ const Orders = ({ user }) => {
 
                   <td className="p-3 border-b border-border">{order.Order_Status}</td>
 
-                  <td className="p-3 border-b border-border">{order.Note || 'ไม่มี'}</td> {/* added */}
+                  <td className="p-3 border-b border-border">
+  {order.Note 
+    ? order.Note.split(', ').map((n, idx) => (
+        <div key={idx}>{n.includes(':') ? n.split(': ')[1] : n}</div>
+      ))
+    : 'ไม่มี'
+  }
+</td>
+
+
 
                   {isManager && (
                     <td className="p-3 border-b border-border space-x-2">
