@@ -84,14 +84,15 @@ const Orders = ({ user }) => {
 
                   <td className="p-3 border-b border-border">{order.Order_Status}</td>
 
-                  <td className="p-3 border-b border-border">
+<td className="p-3 border-b border-border">
   {order.Note 
-    ? order.Note.split(', ').map((n, idx) => (
-        <div key={idx}>{n.includes(':') ? n.split(': ')[1] : n}</div>
+    ? order.Note.split(',').map((note, idx) => (
+        <div key={idx}>{note.trim()}</div>
       ))
     : 'ไม่มี'
   }
 </td>
+
 
 
 
