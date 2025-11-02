@@ -50,7 +50,7 @@ export const updateOrderStatus = async (orderId, Order_Status, token, Note) => {
  * @param {string} Deadline - 'YYYY-MM-DD'
  * @returns {Promise<{success: boolean, orderId: number, warning?: string[]}>}
  */
-export const submitOrders = async ({ orders, Deadline }) => {
+export const submitOrders = async ({ orders, Deadline, Note }) => {
   const token = localStorage.getItem('token');
   if (!token) throw new Error("No authentication token");
 
@@ -60,7 +60,7 @@ export const submitOrders = async ({ orders, Deadline }) => {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`
     },
-    body: JSON.stringify({ orders, Deadline })
+    body: JSON.stringify({ orders, Deadline, Note })
   });
 
   if (!res.ok) {

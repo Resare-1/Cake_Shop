@@ -8,15 +8,14 @@ const SendOrder = () => {
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
-  const [notes, setNotes] = useState({});
   const [quantities, setQuantities] = useState({});
-  const [deadline, setDeadline] = useState(''); // Deadline เดียวต่อ order
+  const [deadline, setDeadline] = useState('');
+  const [orderNote, setOrderNote] = useState(''); // ✅ note เดียวทั้งออเดอร์
 
   useEffect(() => {
     const fetchMenus = async () => {
       try {
         const data = await getMenus();
-        // แสดงเฉพาะเมนูเปิดใช้งาน
         setMenus(data.filter(menu => menu.Is_Available));
       } catch (err) {
         console.error(err);
@@ -29,9 +28,7 @@ const SendOrder = () => {
   }, []);
 
   const handleAddToOrder = (menu) => {
-    const note = notes[menu.MenuID] || 'ไม่มี';
     const quantity = parseInt(quantities[menu.MenuID]) || 1;
-
     if (quantity <= 0) return alert('กรุณาใส่จำนวนมากกว่า 0');
 
     const existingIndex = orders.findIndex((o) => o.MenuID === menu.MenuID);
@@ -39,19 +36,16 @@ const SendOrder = () => {
 
     if (existingIndex >= 0) {
       newOrders[existingIndex].Quantity += quantity;
-      newOrders[existingIndex].Note = note;
     } else {
       newOrders.push({
         MenuID: menu.MenuID,
         name: menu.MenuName,
         Quantity: quantity,
-        Note: note,
-        Ingredients: menu.Ingredients || [], // เก็บ ingredients
+        Ingredients: menu.Ingredients || [],
       });
     }
 
     setOrders(newOrders);
-    setNotes({ ...notes, [menu.MenuID]: '' });
     setQuantities({ ...quantities, [menu.MenuID]: 1 });
   };
 
@@ -68,9 +62,9 @@ const SendOrder = () => {
         orders: orders.map((o) => ({
           MenuID: o.MenuID,
           Quantity: o.Quantity,
-          Note: o.Note,
         })),
         Deadline: deadline,
+        Note: orderNote, // ✅ เพิ่ม note เดียวสำหรับทั้งออเดอร์
       });
 
       if (result.warnings && result.warnings.length > 0) {
@@ -80,6 +74,7 @@ const SendOrder = () => {
       alert('ส่งคำสั่งซื้อทั้งหมดเรียบร้อย!');
       setOrders([]);
       setDeadline('');
+      setOrderNote('');
     } catch (err) {
       console.error(err);
       alert('เกิดข้อผิดพลาดในการส่งคำสั่งซื้อ');
@@ -99,14 +94,6 @@ const SendOrder = () => {
           <div key={menu.MenuID} className="border rounded-md p-2 flex flex-col gap-1">
             <h3 className="font-semibold">{menu.MenuName}</h3>
             <p className="text-sm text-muted-foreground">{menu.MenuDescription}</p>
-
-            <textarea
-              placeholder="ระบุรายละเอียดเพิ่มเติม เช่น ขนาด, รสชาติ"
-              rows={2}
-              className="w-full border border-border rounded-md p-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={notes[menu.MenuID] || ''}
-              onChange={(e) => setNotes({ ...notes, [menu.MenuID]: e.target.value })}
-            />
 
             <div className="flex items-center gap-2 mt-1">
               <input
@@ -136,7 +123,7 @@ const SendOrder = () => {
               <div key={o.MenuID} className="border-b pb-2">
                 <div className="flex justify-between items-center">
                   <span>
-                    {o.name} x {o.Quantity} - ({o.Note})
+                    {o.name} x {o.Quantity}
                   </span>
                   <button
                     onClick={() => setOrders(orders.filter(order => order.MenuID !== o.MenuID))}
@@ -145,7 +132,6 @@ const SendOrder = () => {
                     ×
                   </button>
                 </div>
-                {/* แสดง Ingredients */}
                 {o.Ingredients && o.Ingredients.length > 0 && (
                   <ul className="text-sm text-muted-foreground ml-4 mt-1">
                     {o.Ingredients.map(ing => (
@@ -157,6 +143,18 @@ const SendOrder = () => {
                 )}
               </div>
             ))}
+
+            {/* ✅ Order Note (รวมทุกเมนู) */}
+            <div className="mt-4">
+              <label className="font-semibold block mb-1">หมายเหตุเพิ่มเติม (ถ้ามี):</label>
+              <textarea
+                value={orderNote}
+                onChange={(e) => setOrderNote(e.target.value)}
+                placeholder="เช่น ไม่ใส่นม / เพิ่มวิปครีม / รับช่วงบ่าย"
+                rows={2}
+                className="w-full border border-border rounded-md p-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
 
             {/* Deadline + Submit */}
             <div className="flex items-center gap-4 mt-4">

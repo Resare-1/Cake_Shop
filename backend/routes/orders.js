@@ -101,7 +101,7 @@ router.put('/:id', authenticateJWT, async (req, res) => {
 // POST /api/orders
 router.post('/', authenticateJWT, async (req, res) => {
   const StaffID = req.user.StaffID; // เอา StaffID จาก JWT
-  const { orders, Deadline } = req.body; // รับ orders + Deadline จาก frontend
+  const { orders, Deadline, Note } = req.body; // รับ orders + Deadline จาก frontend
 
   if (!orders || !orders.length) 
     return res.status(400).json({ error: 'No orders provided' });
@@ -122,8 +122,8 @@ router.post('/', authenticateJWT, async (req, res) => {
 
     // 1️⃣ สร้าง Order Master
     const [orderResult] = await connection.query(
-      'INSERT INTO `Order` (StaffID, Order_Status, Order_date, Order_deadline) VALUES (?, ?, NOW(), ?)',
-      [StaffID, 'Pending', Deadline]
+      'INSERT INTO `Order` (StaffID, Order_Status, Order_date, Order_deadline, Note) VALUES (?, ?, NOW(), ?, ?)',
+      [StaffID, 'Pending', Deadline, Note || null]
     );
     const orderId = orderResult.insertId;
 
