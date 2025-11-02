@@ -45,16 +45,24 @@ const CompleteOrders = () => {
             <p><strong>Staff ID:</strong> {order.StaffID}</p>
             <p><strong>Date:</strong> {new Date(order.Order_date).toLocaleString()}</p>
             <p><strong>Items:</strong></p>
-            <ul className="ml-4">
-              {order.items.map((item) => (
-                <li key={item.MenuID}>
-                  {item.MenuName} x {item.Quantity} = {item.Subtotal} ฿
-                  {item.Note && item.Note.trim() !== '' && (
-                    <p className="ml-2 text-gray-600">Note: {item.Note}</p>
-                  )}
-                </li>
-              ))}
-            </ul>
+{order.items.map((item, idx) => {
+  const notesArray = order.Note ? order.Note.split(',').map(n => n.trim()) : [];
+  const noteForItem = notesArray[idx] || 'ไม่มี';
+  return (
+    <div key={item.MenuID} className="mb-2">
+      {/* Menu line — plain, no bullet */}
+      <div>{item.MenuName} x {item.Quantity} = {item.Subtotal} ฿</div>
+
+      {/* Notes — bullets only */}
+      <ul className="ml-4 list-disc list-inside text-gray-600 mt-1">
+        <li>{noteForItem}</li>
+      </ul>
+    </div>
+  );
+})}
+
+
+
             <Button
               onClick={() => handleComplete(order)}
               className="mt-2 bg-green-500 hover:bg-green-600 text-white"
