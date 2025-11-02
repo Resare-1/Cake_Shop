@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
-import { getStaff, addStaff, toggleStaff } from "../../api/staffApi";
+import { getStaff, addStaff, toggleStaff,updateStaff } from "../../api/staffApi";
 
 export default function Employees() {
   const [staffList, setStaffList] = useState([]);
@@ -64,6 +64,41 @@ export default function Employees() {
       alert(err.message);
     }
   };
+const [editingStaff, setEditingStaff] = useState(null);
+const [editForm, setEditForm] = useState({});
+
+// เปิด modal/form แก้ไข
+const startEditStaff = (staff) => {
+  setEditingStaff(staff);
+  setEditForm({
+    Name: staff.Name,
+    Sur_Name: staff.Sur_Name,
+    Role: staff.Role,
+    Phone_Number: staff.Phone_Number,
+    Username: staff.Username,
+    Password: "", // ใส่ password ใหม่ถ้าต้องการเปลี่ยน
+  });
+};
+
+// เปลี่ยนค่า edit form
+const handleEditChange = (e) => {
+  const { name, value } = e.target;
+  setEditForm({ ...editForm, [name]: value });
+};
+
+// submit edit
+const submitEditStaff = async (e) => {
+  e.preventDefault();
+  try {
+    await updateStaff(editingStaff.StaffID, editForm);
+    alert("Staff updated!");
+    setEditingStaff(null);
+    fetchStaff(); // refresh list
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+};
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
@@ -74,18 +109,59 @@ export default function Employees() {
         <CardContent className="space-y-3">
           <h3 className="text-xl font-semibold">Add New Employee</h3>
           <form onSubmit={handleAddStaff} className="space-y-2">
-            <input name="Name" placeholder="First Name" value={form.Name} onChange={handleChange} className="border p-1 rounded w-full" />
-            <input name="Sur_Name" placeholder="Last Name" value={form.Sur_Name} onChange={handleChange} className="border p-1 rounded w-full" />
-            <select name="Role" value={form.Role} onChange={handleChange} className="border p-1 rounded w-full">
+            <input
+              name="Name"
+              placeholder="First Name"
+              value={form.Name}
+              onChange={handleChange}
+              className="border p-1 rounded w-full"
+            />
+            <input
+              name="Sur_Name"
+              placeholder="Last Name"
+              value={form.Sur_Name}
+              onChange={handleChange}
+              className="border p-1 rounded w-full"
+            />
+            <select
+              name="Role"
+              value={form.Role}
+              onChange={handleChange}
+              className="border p-1 rounded w-full"
+            >
               <option value="Staff">Staff</option>
               <option value="Manager">Manager</option>
               <option value="Admin">Admin</option>
             </select>
-            <input name="Phone_Number" placeholder="Phone" value={form.Phone_Number} onChange={handleChange} className="border p-1 rounded w-full" />
-            <input name="Username" placeholder="Username" value={form.Username} onChange={handleChange} className="border p-1 rounded w-full" />
-            <input name="Password" type="password" placeholder="Password" value={form.Password} onChange={handleChange} className="border p-1 rounded w-full" />
+            <input
+              name="Phone_Number"
+              placeholder="Phone"
+              value={form.Phone_Number}
+              onChange={handleChange}
+              className="border p-1 rounded w-full"
+            />
+            <input
+              name="Username"
+              placeholder="Username"
+              value={form.Username}
+              onChange={handleChange}
+              className="border p-1 rounded w-full"
+            />
+            <input
+              name="Password"
+              type="password"
+              placeholder="Password"
+              value={form.Password}
+              onChange={handleChange}
+              className="border p-1 rounded w-full"
+            />
             <div className="flex justify-center">
-              <button type="submit" className="bg-blue-500 text-white px-4 py-1 rounded mt-2">Add Staff</button>
+              <button
+                type="submit"
+                className="bg-blue-500 text-white px-4 py-1 rounded mt-2"
+              >
+                Add Staff
+              </button>
             </div>
           </form>
         </CardContent>
@@ -96,22 +172,107 @@ export default function Employees() {
         <CardContent className="space-y-3">
           <h3 className="text-xl font-semibold">Employees</h3>
           <ul className="space-y-1">
-            {staffList.map(s => (
-              <li key={s.StaffID} className="flex justify-between items-center border-b py-1">
-                <span>{s.Name} {s.Sur_Name} ({s.Role}) - {s.Phone_Number}</span>
-                <button
-                  className={`px-2 py-0.5 rounded font-semibold text-white ${
-                    s.Staff_is_available ? "bg-green-500" : "bg-red-500"
-                  }`}
-                  onClick={() => toggleStaffStatus(s)}
-                >
-                  {s.Staff_is_available ? "Active" : "Disabled"}
-                </button>
+            {staffList.map((s) => (
+              <li
+                key={s.StaffID}
+                className="flex justify-between items-center border-b py-1"
+              >
+                <span>
+                  {s.Name} {s.Sur_Name} ({s.Role}) - {s.Phone_Number}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    className={`px-2 py-0.5 rounded font-semibold text-white ${
+                      s.Staff_is_available ? "bg-green-500" : "bg-red-500"
+                    }`}
+                    onClick={() => toggleStaffStatus(s)}
+                  >
+                    {s.Staff_is_available ? "Active" : "Disabled"}
+                  </button>
+                  <button
+                    className="px-2 py-0.5 rounded bg-yellow-500 text-white"
+                    onClick={() => startEditStaff(s)}
+                  >
+                    Edit
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         </CardContent>
       </Card>
+
+      {/* Edit Employee Form */}
+      {editingStaff && (
+        <Card>
+          <CardContent className="space-y-3">
+            <h3 className="text-xl font-semibold">Edit Employee</h3>
+            <form onSubmit={submitEditStaff} className="space-y-2">
+              <input
+                name="Name"
+                placeholder="First Name"
+                value={editForm.Name}
+                onChange={handleEditChange}
+                className="border p-1 rounded w-full"
+              />
+              <input
+                name="Sur_Name"
+                placeholder="Last Name"
+                value={editForm.Sur_Name}
+                onChange={handleEditChange}
+                className="border p-1 rounded w-full"
+              />
+              <select
+                name="Role"
+                value={editForm.Role}
+                onChange={handleEditChange}
+                className="border p-1 rounded w-full"
+              >
+                <option value="Staff">Staff</option>
+                <option value="Manager">Manager</option>
+                <option value="Admin">Admin</option>
+              </select>
+              <input
+                name="Phone_Number"
+                placeholder="Phone"
+                value={editForm.Phone_Number}
+                onChange={handleEditChange}
+                className="border p-1 rounded w-full"
+              />
+              <input
+                name="Username"
+                placeholder="Username"
+                value={editForm.Username}
+                onChange={handleEditChange}
+                className="border p-1 rounded w-full"
+              />
+              <input
+                name="Password"
+                type="password"
+                placeholder="New Password (leave empty to keep current)"
+                value={editForm.Password}
+                onChange={handleEditChange}
+                className="border p-1 rounded w-full"
+              />
+              <div className="flex justify-center gap-2">
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-1 rounded"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingStaff(null)}
+                  className="bg-gray-500 text-white px-4 py-1 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

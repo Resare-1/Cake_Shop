@@ -42,3 +42,20 @@ export const toggleStaff = async (id, Staff_is_available) => {
   if (!res.ok) throw new Error("Failed to toggle staff");
   return await res.json();
 };
+// แก้ไขข้อมูลพนักงาน
+export const updateStaff = async (id, updatedData) => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE_URL}/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updatedData),
+  });
+  if (!res.ok) {
+    const errData = await res.json();
+    throw new Error(errData.error || "Failed to update staff");
+  }
+  return await res.json();
+};

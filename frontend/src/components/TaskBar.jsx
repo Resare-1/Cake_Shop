@@ -3,6 +3,7 @@ import { LogOut, Menu as MenuIcon, ShoppingBag, Package } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { getOrders } from '../api/orderApi';
 import { getAllIngredients } from '../api/ingredientApi';
+import { getStaff } from '../api/staffApi'; // ✅ เพิ่ม import
 
 const exportCSV = async () => {
   const token = localStorage.getItem("token");
@@ -40,6 +41,9 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
     checkOrder: 0,
   });
 
+  const [staffInfo, setStaffInfo] = useState(null); // ✅ เก็บข้อมูลพนักงาน
+
+  // 🔹 ดึงข้อมูลแจ้งเตือน
   const fetchNotifications = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -68,12 +72,25 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
     }
   };
 
+  // 🔹 ดึงข้อมูล staff ของ user ที่ login
+  const fetchStaffData = async () => {
+    try {
+      const allStaff = await getStaff();
+      const found = allStaff.find(s => s.Staff_Username === user.username);
+      setStaffInfo(found || null);
+    } catch (err) {
+      console.error("Failed to load staff info:", err);
+    }
+  };
+
   useEffect(() => {
+    fetchStaffData();
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 500); // refresh ทุก 30 วินาที
+    const interval = setInterval(fetchNotifications, 500); // refresh ทุก 0.5 วินาที
     return () => clearInterval(interval);
   }, [user]);
 
+  // 🔹 กำหนดเมนูตาม role
   const getMenuItems = () => {
     const role = user.role.toLowerCase();
 
@@ -111,11 +128,22 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar-bg text-sidebar-text flex flex-col shadow-lg">
-      {/* User Section */}
+      {/* 🔹 User Info Section */}
       <div className="p-6 border-b border-sidebar-text/20">
         <div className="mb-4">
-          <p className="font-bold text-lg">{user.username}</p>
-          <p className="text-sm text-sidebar-text/80">{user.role}</p>
+          <p className="font-bold text-lg">
+            {staffInfo
+              ? `${staffInfo.Name} ${staffInfo.Sur_Name}`
+              : user.username}
+          </p>
+          <p className="text-sm text-sidebar-text/80 capitalize">
+            {staffInfo ? staffInfo.Role || user.role : user.role}
+          </p>
+          {staffInfo && (
+            <p className="text-xs text-sidebar-text/60">
+              {staffInfo.Phone_Number || "No phone provided"}
+            </p>
+          )}
         </div>
         <Button
           onClick={onLogout}
@@ -128,7 +156,7 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
         </Button>
       </div>
 
-      {/* Navigation */}
+      {/* 🔹 Navigation Menu */}
       <nav className="flex-1 p-4 space-y-2">
         {items.map((item) => {
           const Icon = item.icon;
@@ -154,7 +182,7 @@ const TaskBar = ({ active, setActive, user, onLogout }) => {
         })}
       </nav>
 
-      {/* Manager Export Button */}
+      {/* 🔹 Manager Export Button */}
       {user.role.toLowerCase() === 'manager' && (
         <div className="p-4 border-t border-sidebar-text/20">
           <Button

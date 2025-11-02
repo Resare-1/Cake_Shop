@@ -11,7 +11,10 @@ const router = express.Router();
 // -----------------------------
 router.get("/", authenticateJWT, async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT StaffID, Name, Sur_Name, Role, Phone_Number, Username, Staff_is_available FROM staff");
+    const [rows] = await pool.query(`
+      SELECT StaffID, Name, Sur_Name, Role, Phone_Number, Username, Staff_is_available
+      FROM staff
+    `);
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -31,17 +34,31 @@ router.post("/", authenticateJWT, async (req, res) => {
     }
 
     // เช็ค Username ซ้ำ
-    const [existing] = await pool.query("SELECT StaffID FROM staff WHERE Username = ?", [Username]);
-    if (existing.length > 0) return res.status(400).json({ error: "Username already exists" });
+    const [existing] = await pool.query(
+      "SELECT StaffID FROM staff WHERE Username = ?",
+      [Username]
+    );
+    if (existing.length > 0)
+      return res.status(400).json({ error: "Username already exists" });
 
     const hashedPassword = await bcrypt.hash(Password, 10);
 
     const [result] = await pool.query(
-      "INSERT INTO staff (Name, Sur_Name, Role, Phone_Number, Username, Password) VALUES (?, ?, ?, ?, ?, ?)",
+      `INSERT INTO staff 
+        (Name, Sur_Name, Role, Phone_Number, Username, Password)
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [Name, Sur_Name, Role, Phone_Number, Username, hashedPassword]
     );
 
-    res.json({ StaffID: result.insertId, Name, Sur_Name, Role, Phone_Number, Username, Staff_is_available: true });
+    res.json({
+      StaffID: result.insertId,
+      Name,
+      Sur_Name,
+      Role,
+      Phone_Number,
+      Username,
+      Staff_is_available: true,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to add staff" });
@@ -50,12 +67,12 @@ router.post("/", authenticateJWT, async (req, res) => {
 
 // -----------------------------
 // PUT /api/staff/:id
-// แก้ไขข้อมูลพนักงาน (Optional)
+// แก้ไขข้อมูลพนักงาน (ไม่รวม toggle)
 // -----------------------------
 router.put("/:id", authenticateJWT, async (req, res) => {
   try {
     const { id } = req.params;
-    const { Name, Sur_Name, Role, Phone_Number, Password } = req.body;
+    const { Name, Sur_Name, Role, Phone_Number, Username, Password } = req.body;
 
     const updates = [];
     const values = [];
@@ -64,13 +81,15 @@ router.put("/:id", authenticateJWT, async (req, res) => {
     if (Sur_Name) { updates.push("Sur_Name = ?"); values.push(Sur_Name); }
     if (Role) { updates.push("Role = ?"); values.push(Role); }
     if (Phone_Number) { updates.push("Phone_Number = ?"); values.push(Phone_Number); }
+    if (Username) { updates.push("Username = ?"); values.push(Username); }
     if (Password) {
       const hashedPassword = await bcrypt.hash(Password, 10);
       updates.push("Password = ?");
       values.push(hashedPassword);
     }
 
-    if (updates.length === 0) return res.status(400).json({ error: "No fields to update" });
+    if (updates.length === 0)
+      return res.status(400).json({ error: "No fields to update" });
 
     values.push(id);
     await pool.query(`UPDATE staff SET ${updates.join(", ")} WHERE StaffID = ?`, values);
@@ -91,9 +110,13 @@ router.put("/:id/toggle", authenticateJWT, async (req, res) => {
     const { id } = req.params;
     const { Staff_is_available } = req.body;
 
-    if (typeof Staff_is_available !== "boolean") return res.status(400).json({ error: "Staff_is_available must be boolean" });
+    if (typeof Staff_is_available !== "boolean")
+      return res.status(400).json({ error: "Staff_is_available must be boolean" });
 
-    await pool.query("UPDATE staff SET Staff_is_available = ? WHERE StaffID = ?", [Staff_is_available, id]);
+    await pool.query(
+      "UPDATE staff SET Staff_is_available = ? WHERE StaffID = ?",
+      [Staff_is_available ? 1 : 0, id]
+    );
     res.json({ message: "Staff availability updated" });
   } catch (err) {
     console.error(err);
