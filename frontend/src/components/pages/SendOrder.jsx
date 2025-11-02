@@ -145,15 +145,17 @@ const SendOrder = () => {
                 </div>
 
                 {/* Individual Note Field */}
-                <textarea
-                  value={itemNotes[o.MenuID] || ''}
-                  onChange={(e) =>
-                    setItemNotes({ ...itemNotes, [o.MenuID]: e.target.value })
-                  }
-                  placeholder={`หมายเหตุสำหรับ ${o.name} (ถ้ามี)`}
-                  rows={1}
-                  className="w-full border border-border rounded-md p-1 mt-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
+<textarea
+  value={itemNotes[o.MenuID] || ''}
+  onChange={(e) => {
+    // Remove commas as user types
+    const sanitized = e.target.value.replace(/,/g, '');
+    setItemNotes({ ...itemNotes, [o.MenuID]: sanitized });
+  }}
+  placeholder={`หมายเหตุสำหรับ ${o.name} (ถ้ามี)`}
+  rows={1}
+  className="w-full border border-border rounded-md p-1 mt-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+/>
 
                 {o.Ingredients && o.Ingredients.length > 0 && (
                   <ul className="text-sm text-muted-foreground ml-4 mt-1">

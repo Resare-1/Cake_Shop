@@ -2,7 +2,19 @@ import React from "react";
 import { cn } from "../../lib/utils";
 
 const Input = React.forwardRef((props, ref) => {
-  const { className, type, ...rest } = props;
+  const { className, type, onChange, ...rest } = props;
+
+  // Handle input changes normally
+  const handleChange = (e) => {
+    if (onChange) onChange(e);
+  };
+
+  // Block comma key
+  const handleKeyDown = (e) => {
+    if (e.key === ",") {
+      e.preventDefault(); // stop comma from being typed
+    }
+  };
 
   return (
     <input
@@ -12,6 +24,8 @@ const Input = React.forwardRef((props, ref) => {
         className
       )}
       ref={ref}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown} // prevent comma typing
       {...rest}
     />
   );
