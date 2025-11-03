@@ -25,23 +25,29 @@ const fetchIngredients = async () => {
     fetchIngredients();
   }, []);
 
-  // -----------------------------
-  // Update stock based on delta input
-  // -----------------------------
-  const handleUpdateStock = async (id) => {
-    const delta = parseInt(editQty[id]) || 0;
-    if (delta === 0) return;
+// -----------------------------
+// Update stock based on delta input
+// -----------------------------
+const handleUpdateStock = async (id) => {
+  let delta = parseInt(editQty[id]) || 0;
 
-    try {
-      await updateIngredientStock(id, delta);
-      alert("Stock updated successfully!");
-      setEditQty((prev) => ({ ...prev, [id]: "" }));
-      fetchIngredients();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update stock");
-    }
-  };
+  if (delta === 0) return;
+
+  // ✅ จำกัด upper bound 1000
+  if (delta > 1000) delta = 1000;
+  if (delta < -1000) delta = -1000; // optional ถ้าต้องการลด stock ก็ limit
+
+  try {
+    await updateIngredientStock(id, delta);
+    alert("Stock updated successfully!");
+    setEditQty((prev) => ({ ...prev, [id]: "" }));
+    fetchIngredients();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to update stock");
+  }
+};
+
 
   // -----------------------------
   // Add new ingredient
@@ -92,18 +98,21 @@ const fetchIngredients = async () => {
         <td className="border p-2">{item.Unit}</td>
         <td className="border p-2 text-center">
           <div className="flex justify-center items-center space-x-2">
-            <input
-              type="number"
-              placeholder="Change"
-              className="w-20 p-1 border rounded text-center"
-              value={editQty[item.IngredientID] ?? ""}
-              onChange={(e) =>
-                setEditQty((prev) => ({
-                  ...prev,
-                  [item.IngredientID]: e.target.value,
-                }))
-              }
-            />
+          <input
+            type="number"
+            placeholder="Change"
+            className="w-20 p-1 border rounded text-center"
+            value={editQty[item.IngredientID] ?? ""}
+            onChange={(e) => {
+              let value = parseInt(e.target.value) || 0;
+              if (value > 1000) value = 1000;
+              if (value < -1000) value = -1000; // optional
+              setEditQty((prev) => ({
+                ...prev,
+                [item.IngredientID]: value,
+              }));
+            }}
+          />
             <Button onClick={() => handleUpdateStock(item.IngredientID)}>Update</Button>
           </div>
         </td>
