@@ -32,24 +32,66 @@ export default function Employees() {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
+const validateStaffForm = (data) => {
+  const nameRegex = /^[ก-ฮa-zA-Z\s]+$/;
+  const phoneRegex = /^\d{10}$/;
 
-  const handleAddStaff = async (e) => {
-    e.preventDefault();
-    if (!form.Name || !form.Sur_Name || !form.Role || !form.Phone_Number || !form.Username || !form.Password) {
-      alert("All fields are required!");
-      return;
-    }
+  if (!nameRegex.test(data.Name)) {
+    alert("First name must contain only letters (Thai/English)");
+    return false;
+  }
+  if (!nameRegex.test(data.Sur_Name)) {
+    alert("Last name must contain only letters (Thai/English)");
+    return false;
+  }
+  if (!phoneRegex.test(data.Phone_Number)) {
+    alert("Phone number must be 10 digits");
+    return false;
+  }
+  return true;
+};
+// สำหรับ Add Staff
+const handleAddStaff = async (e) => {
+  e.preventDefault();
 
-    try {
-      await addStaff(form);
-      alert("New staff added!");
-      setForm({ Name: "", Sur_Name: "", Role: "Staff", Phone_Number: "", Username: "", Password: "" });
-      fetchStaff();
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
-    }
-  };
+  // Validation
+  if (!form.Name || !form.Sur_Name || !form.Role || !form.Phone_Number || !form.Username || !form.Password) {
+    alert("All fields are required!");
+    return;
+  }
+
+  if (!/^[A-Za-zก-๙\s]+$/.test(form.Name)) {
+    alert("Name must contain only letters!");
+    return;
+  }
+
+  if (!/^[A-Za-zก-๙\s]+$/.test(form.Sur_Name)) {
+    alert("Surname must contain only letters!");
+    return;
+  }
+
+  if (!/^\d{10}$/.test(form.Phone_Number)) {
+    alert("Phone number must be 10 digits!");
+    return;
+  }
+
+  if (!/^\d+$/.test(form.Password)) {
+    alert("Password must contain only numbers!");
+    return;
+  }
+
+  try {
+    await addStaff(form);
+    alert("New staff added!");
+    setForm({ Name: "", Sur_Name: "", Role: "Staff", Phone_Number: "", Username: "", Password: "" });
+    fetchStaff();
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+};
+
+
 
   // สลับสถานะ Active/Disable
   const toggleStaffStatus = async (staff) => {
@@ -83,22 +125,68 @@ const startEditStaff = (staff) => {
 // เปลี่ยนค่า edit form
 const handleEditChange = (e) => {
   const { name, value } = e.target;
+
+  // ถ้าแก้ชื่อหรือสกุล
+  if (name === "Name" || name === "Sur_Name") {
+    // ลบตัวที่ไม่ใช่ตัวอักษรไทย/อังกฤษ/space
+    const filtered = value.replace(/[^ก-ฮa-zA-Z\s]/g, "");
+    setEditForm({ ...editForm, [name]: filtered });
+    return;
+  }
+
+  // ถ้าแก้เบอร์
+  if (name === "Phone_Number") {
+    // ลบตัวที่ไม่ใช่ตัวเลขและจำกัด 10 หลัก
+    const filtered = value.replace(/\D/g, "").slice(0, 10);
+    setEditForm({ ...editForm, [name]: filtered });
+    return;
+  }
+
   setEditForm({ ...editForm, [name]: value });
 };
+
 
 // submit edit
 const submitEditStaff = async (e) => {
   e.preventDefault();
+
+  // Validation
+  if (!editForm.Name || !editForm.Sur_Name || !editForm.Role || !editForm.Phone_Number || !editForm.Username) {
+    alert("All fields are required!");
+    return;
+  }
+
+  if (!/^[A-Za-zก-๙\s]+$/.test(editForm.Name)) {
+    alert("Name must contain only letters!");
+    return;
+  }
+
+  if (!/^[A-Za-zก-๙\s]+$/.test(editForm.Sur_Name)) {
+    alert("Surname must contain only letters!");
+    return;
+  }
+
+  if (!/^\d{10}$/.test(editForm.Phone_Number)) {
+    alert("Phone number must be 10 digits!");
+    return;
+  }
+
+  if (editForm.Password && !/^\d+$/.test(editForm.Password)) {
+    alert("Password must contain only numbers!");
+    return;
+  }
+
   try {
     await updateStaff(editingStaff.StaffID, editForm);
     alert("Staff updated!");
     setEditingStaff(null);
-    fetchStaff(); // refresh list
+    fetchStaff();
   } catch (err) {
     console.error(err);
     alert(err.message);
   }
 };
+
 
   return (
     <div className="p-6 space-y-6 max-w-3xl mx-auto">
