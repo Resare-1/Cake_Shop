@@ -75,10 +75,11 @@ const handleAddStaff = async (e) => {
     return;
   }
 
-  if (!/^\d+$/.test(form.Password)) {
-    alert("Password must contain only numbers!");
-    return;
-  }
+if (!/^[A-Za-z0-9]+$/.test(form.Password)) {
+  alert("Password can only contain English letters and numbers!");
+  return;
+}
+
 
   try {
     await addStaff(form);
@@ -171,10 +172,11 @@ const submitEditStaff = async (e) => {
     return;
   }
 
-  if (editForm.Password && !/^\d+$/.test(editForm.Password)) {
-    alert("Password must contain only numbers!");
-    return;
-  }
+if (editForm.Password && !/^[A-Za-z0-9]*$/.test(editForm.Password)) {
+  alert("Password can only contain English letters and numbers!");
+  return;
+}
+
 
   try {
     await updateStaff(editingStaff.StaffID, editForm);
