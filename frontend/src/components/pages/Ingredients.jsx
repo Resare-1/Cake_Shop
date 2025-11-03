@@ -83,7 +83,7 @@ const fetchIngredients = async () => {
 <tbody>
   {ingredients.map((item) => {
     const qty = parseFloat(item.Quantity);
-    const isLow = isNaN(qty) || qty <= 0;
+    const isLow = isNaN(qty) || qty <= 100;
 
     return (
       <tr key={item.IngredientID}>

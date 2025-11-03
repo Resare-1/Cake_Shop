@@ -30,12 +30,17 @@ const SendOrder = () => {
   const handleAddToOrder = (menu) => {
     const quantity = parseInt(quantities[menu.MenuID]) || 1;
     if (quantity <= 0) return alert('กรุณาใส่จำนวนมากกว่า 0');
+    if (quantity > 10) return alert('ต่อเมนูสามารถสั่งได้ไม่เกิน 10 ชิ้น');
 
     const existingIndex = orders.findIndex((o) => o.MenuID === menu.MenuID);
     let newOrders = [...orders];
 
     if (existingIndex >= 0) {
-      newOrders[existingIndex].Quantity += quantity;
+      const newQty = newOrders[existingIndex].Quantity + quantity;
+      if (newQty > 10) {
+        return alert(`รวมแล้วต่อเมนู "${menu.MenuName}" สั่งได้ไม่เกิน 10 ชิ้น`);
+      }
+      newOrders[existingIndex].Quantity = newQty;
     } else {
       newOrders.push({
         MenuID: menu.MenuID,
@@ -55,8 +60,13 @@ const SendOrder = () => {
     if (!deadline) return alert('กรุณาเลือก Deadline');
 
     const minDeadline = dayjs().add(1, 'day').startOf('day');
+    const maxDeadline = dayjs().add(2, 'month').endOf('day');
+
+    // ✅ ตรวจสอบว่าอยู่ในช่วงที่อนุญาต
     if (dayjs(deadline).isBefore(minDeadline))
       return alert('Deadline ต้องเป็นวันถัดไปหรือมากกว่า');
+    if (dayjs(deadline).isAfter(maxDeadline))
+      return alert('Deadline ต้องไม่เกิน 2 เดือนจากวันนี้');
 
     // Only send the note text, not the menu name
     const combinedNotes = orders
@@ -89,7 +99,9 @@ const SendOrder = () => {
 
   if (loading) return <p>Loading menus...</p>;
 
+  // ✅ จำกัดวันให้เลือกได้ระหว่างพรุ่งนี้ถึงภายใน 2 เดือน
   const minDate = dayjs().add(1, 'day').format('YYYY-MM-DD');
+  const maxDate = dayjs().add(2, 'month').format('YYYY-MM-DD');
 
   return (
     <div className="flex ml-64 p-4 min-h-screen bg-background gap-4">
@@ -105,10 +117,16 @@ const SendOrder = () => {
               <input
                 type="number"
                 min={1}
+                max={10} // ✅ จำกัดให้ไม่เกิน 10 ในช่องกรอก
                 value={quantities[menu.MenuID] || 1}
-                onChange={(e) =>
-                  setQuantities({ ...quantities, [menu.MenuID]: parseInt(e.target.value) })
-                }
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  if (value > 10) {
+                    alert('ต่อเมนูสามารถสั่งได้ไม่เกิน 10 ชิ้น');
+                    return;
+                  }
+                  setQuantities({ ...quantities, [menu.MenuID]: value });
+                }}
                 className="w-20 border border-border rounded-md p-1 text-center"
               />
               <Button onClick={() => handleAddToOrder(menu)}>Add</Button>
@@ -145,17 +163,16 @@ const SendOrder = () => {
                 </div>
 
                 {/* Individual Note Field */}
-<textarea
-  value={itemNotes[o.MenuID] || ''}
-  onChange={(e) => {
-    // Remove commas as user types
-    const sanitized = e.target.value.replace(/,/g, '');
-    setItemNotes({ ...itemNotes, [o.MenuID]: sanitized });
-  }}
-  placeholder={`หมายเหตุสำหรับ ${o.name} (ถ้ามี)`}
-  rows={1}
-  className="w-full border border-border rounded-md p-1 mt-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-/>
+                <textarea
+                  value={itemNotes[o.MenuID] || ''}
+                  onChange={(e) => {
+                    const sanitized = e.target.value.replace(/,/g, '');
+                    setItemNotes({ ...itemNotes, [o.MenuID]: sanitized });
+                  }}
+                  placeholder={`หมายเหตุสำหรับ ${o.name} (ถ้ามี)`}
+                  rows={1}
+                  className="w-full border border-border rounded-md p-1 mt-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
 
                 {o.Ingredients && o.Ingredients.length > 0 && (
                   <ul className="text-sm text-muted-foreground ml-4 mt-1">
@@ -175,6 +192,7 @@ const SendOrder = () => {
               <input
                 type="date"
                 min={minDate}
+                max={maxDate}
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
                 className="border border-border rounded-md p-1"
@@ -183,6 +201,9 @@ const SendOrder = () => {
                 Submit All Orders
               </Button>
             </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              * สามารถเลือกวันได้ภายใน 2 เดือนนับจากวันนี้
+            </p>
           </div>
         )}
       </div>

@@ -71,7 +71,7 @@ const fetchNotifications = async () => {
     // สำหรับ manager / admin สามารถคง logic เดิม
     if (user.role.toLowerCase() === "manager") {
       const ingredients = await getAllIngredients(token);
-      const lowStock = ingredients.filter(i => i.Quantity <= 0).length;
+      const lowStock = ingredients.filter(i => i.Quantity <= 100).length;
       const checkOrders = orders.filter(o => o.Order_Status === "CheckOrder").length;
 
       setNotifications(prev => ({
