@@ -6,16 +6,21 @@ const Orders = ({ user }) => {
   const token = localStorage.getItem("token");
   const isManager = user?.role?.toLowerCase() === "manager";
 
-  // fetch orders จาก backend
-  const fetchOrders = async () => {
-    try {
-      const data = await getOrders(token);
-      setOrders(data);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to fetch orders");
-    }
-  };
+// fetch orders จาก backend
+const fetchOrders = async () => {
+  try {
+    const data = await getOrders(token);
+
+    // Sort orders by Order_id descending (latest first)
+    const sorted = [...data].sort((a, b) => b.Order_id - a.Order_id);
+
+    setOrders(sorted);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to fetch orders");
+  }
+};
+
 
   useEffect(() => {
     fetchOrders();
